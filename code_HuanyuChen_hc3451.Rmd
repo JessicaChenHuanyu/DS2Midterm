@@ -1,0 +1,14 @@
+---
+title: "Data Science II Midterm Project"
+author: "Huanyu Chen"
+output: pdf_document
+---
+
+
+# Exploratory Analysis and Data Visualization
+
+# Model Training
+
+# Results
+
+# Conclusions
