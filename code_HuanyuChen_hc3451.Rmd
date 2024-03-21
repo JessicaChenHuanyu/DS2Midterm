@@ -4,11 +4,62 @@ author: "Huanyu Chen"
 output: pdf_document
 ---
 
+```{r message=FALSE, warning = FALSE}
+library(ggplot2)
+library(tidyverse)
+library(corrplot)
 
+load("recovery.Rdata")
+```
+
+\newpage
 # Exploratory Analysis and Data Visualization
 
+## Exploratory Analysis
+In this dataset, `age`, `height`, `weight`, `bmi`, `SBP`, `LDL`, and `recovery_time` are continuous variables.
+```{r}
+continuous_vars <- dat[, c("age", "height", "weight", "bmi",
+                           "SBP", "LDL", "recovery_time")]
+summary(continuous_vars)
+```
+
+## Boxplot of Recovery Time by Smoking Status and Gender
+
+Our analysis reveals a notable trend: across all smoking statuses, females (`gender` = 0) consistently exhibit longer recovery times compared to males. Interestingly, individuals who had never smoked had more outliers on the right side of the boxplot, suggesting a longer recovery time. This counter-intuitive finding suggests that individuals with healthier lifestyles, such as non-smokers, paradoxically require more time to recover from COVID-19.
+
+```{r}
+ggplot(dat, aes(x = recovery_time, fill = factor(gender))) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Recovery Time by Smoking Status and Gender",
+       x = "Recovery Time", y = "Smoking Status",
+       fill = "Gender") +
+  facet_wrap(~factor(smoking), ncol = 1) +
+  theme_bw()
+```
+
+## Pairs
+
+Our exploration of the variables age, BMI, and recovery time reveals no clear linear relationships among them. It implies that other complex factors beyond these variables might be influencing the recovery time from COVID-19, highlighting the complexity of analysis about recovery time.
+
+```{r}
+pairs(dat[, c("age", "bmi", "recovery_time")])
+```
+
+## Correlation Table
+
+The correlation analysis conducted on variables including "height," "weight," and "bmi" suggests a strong positive correlation among these attributes, which aligns with our common understanding. However, no significant correlations were observed between these attributes and other variables in the dataset.
+
+```{r}
+correlation_matrix <- cor(dat[, c("age", "height", "weight", "bmi",
+                                  "SBP", "LDL", "recovery_time")])
+corrplot(correlation_matrix, method = "color")
+```
+
+\newpage
 # Model Training
 
+\newpage
 # Results
 
+\newpage
 # Conclusions
