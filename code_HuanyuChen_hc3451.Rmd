@@ -97,7 +97,6 @@ test_error <- sqrt(mean((pred_pls_model - testData$recovery_time)^2))
 print(test_error)
 ```
 
-## DF: need to be done
 ```{r message = FALSE}
 library(mgcv)
 library(earth)
@@ -163,10 +162,17 @@ rmse <- sqrt(mean(squared_errors))
 print(rmse)
 ```
 
+```{r}
+bwplot(resamples(list(mars = mars.fit, gam = gam.fit)),
+       metric = "RMSE")
+```
+
 \newpage
-# Results: need to be done
+# Results
 
 The RMSE values obtained from Lasso and PLS models were comparable, suggesting that both models performed similarly in predicting the target variable `recovery_time`. This implies that both regularization techniques, despite their differences in approach, yielded comparable predictive performance in this scenario.
+
+The RMSE results indicate that the MARS model achieves a smaller error compared to the GAM model, suggesting superior predictive accuracy. MARS utilizes a piecewise linear approach, allowing for both linear and nonlinear relationships between predictors and the response, while GAM assumes smooth, nonlinear relationships using smoothing functions like splines. Despite MARS potentially offering less interpretability due to its segmented nature, its ability to capture intricate relationships in the data appears to contribute to its better performance in this scenario.
 
 \newpage
 # Conclusions
