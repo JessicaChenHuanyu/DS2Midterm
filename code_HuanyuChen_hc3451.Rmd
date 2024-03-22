@@ -97,12 +97,76 @@ test_error <- sqrt(mean((pred_pls_model - testData$recovery_time)^2))
 print(test_error)
 ```
 
+## DF: need to be done
+```{r message = FALSE}
+library(mgcv)
+library(earth)
+```
+
+
+## MARS
+```{r}
+ctrl1 <- trainControl(method = "cv", number = 5)
+set.seed(2024)
+mars_grid <- expand.grid(degree = 1:4, nprune = 1:20)
+mars.fit <- train(recovery_time ~ ., 
+                  data = trainData, 
+                  method = "earth",
+                  tuneGrid = mars_grid,
+                  trControl = ctrl1)
+ggplot(mars.fit)
+```
+
+```{r}
+mars.fit$bestTune
+coef(mars.fit$finalModel)
+p1 = pdp::partial(mars.fit, pred.var = c("bmi", "age"), grid.resolution = 10) %>%
+  pdp::plotPartial(levelplot = FALSE, zlab = "yhat", drape = TRUE, screen = list(z = 40, x = -60))
+p2 = pdp::partial(mars.fit, pred.var = c("bmi", "LDL"), grid.resolution = 10) %>%
+  pdp::plotPartial(levelplot = FALSE, zlab = "yhat", drape = TRUE, screen = list(z = 40, x = -60))
+gridExtra::grid.arrange(p1, p2, ncol = 2)
+```
+
+```{r}
+mars_pred <- predict(mars.fit, newdata = testData)
+y_test <- testData$recovery_time
+squared_errors <- (mars_pred - y_test)^2
+rmse <- sqrt(mean(squared_errors))
+print(rmse)
+```
+
+## GAM
+For the variables `height` and `bmi,` the residuals in the plots suggest that there appears to be some curvature or non-linearity in the relationship to `recovery_time`. Therefore, when modeling these variables, it may be necessary to consider more flexible approaches, such as including polynomial terms or using non-linear transformations to better capture the underlying relationship with the outcome variable.
+```{r}
+set.seed(2024)
+gam.fit <- train(recovery_time ~ ., 
+                 data = trainData, 
+                 method = "gam",
+                 tuneGrid = data.frame(method = "GCV.Cp", select = TRUE),
+                 trControl = ctrl1)
+gam.fit$finalModel
+```
+
+```{r}
+par(mar = c(1, 1, 1, 1), mfrow=c(4,4))
+for (i in 1:length(gam.fit$finalModel$term.labels)) {
+  plot(gam.fit$finalModel, residuals = TRUE, shade = TRUE,
+       xlab = gam.fit$finalModel$term.labels[i], ylab = "Residuals")
+  }
+```
+
+```{r}
+gam_pred <- predict(gam.fit, newdata = testData)
+y_test <- testData$recovery_time
+squared_errors <- (gam_pred - y_test)^2
+rmse <- sqrt(mean(squared_errors))
+print(rmse)
+```
+
 \newpage
-# Results
+# Results: need to be done
 
 The RMSE values obtained from Lasso and PLS models were comparable, suggesting that both models performed similarly in predicting the target variable `recovery_time`. This implies that both regularization techniques, despite their differences in approach, yielded comparable predictive performance in this scenario.
-
-
 
 \newpage
 # Conclusions
