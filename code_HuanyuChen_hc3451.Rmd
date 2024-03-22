@@ -12,7 +12,6 @@ library(corrplot)
 load("recovery.Rdata")
 ```
 
-\newpage
 # Exploratory Analysis and Data Visualization
 
 ## Exploratory Analysis
@@ -57,9 +56,53 @@ corrplot(correlation_matrix, method = "color")
 
 \newpage
 # Model Training
+## Lasso
+```{r warning = FALSE, message=FALSE}
+library(caret)
+library(glmnet)
+library(pls)
+
+set.seed(2024)
+indexTrain <- createDataPartition(y = dat$recovery_time, p = 0.8, list = FALSE)
+trainData <- dat[indexTrain, ]
+testData <- dat[-indexTrain, ]
+
+cv.lasso <- cv.glmnet(as.matrix(trainData[, -ncol(trainData)]),
+                      trainData$recovery_time, 
+                      alpha = 1, 
+                      lambda = exp(seq(5, -5, length = 100)))
+plot(cv.lasso)
+selected_lambda <- cv.lasso$lambda.min
+coefficients_min <- coef(cv.lasso, s = selected_lambda)
+num_predictors_min <- sum(coefficients_min != 0)
+
+test_predictions <- predict(cv.lasso, newx = as.matrix(testData[, -ncol(testData)]),
+                            s = selected_lambda, type = "response")
+test_error <- sqrt(mean((test_predictions - testData$recovery_time)^2))
+print(test_error)
+```
+
+## PLS Model
+```{r}
+set.seed(2024)
+pls_model <- plsr(recovery_time ~ ., data = trainData,
+                  scale = TRUE, validation = "CV")
+
+test_error_pls <- RMSEP(pls_model)
+n_comp <- which.min(test_error_pls$val[1,,]) - 1
+
+validationplot(pls_model, val.type = "MSEP", legendpos = "topright")
+pred_pls_model <- predict(pls_model, newdata = testData, ncomp = n_comp)
+test_error <- sqrt(mean((pred_pls_model - testData$recovery_time)^2))
+print(test_error)
+```
 
 \newpage
 # Results
+
+The RMSE values obtained from Lasso and PLS models were comparable, suggesting that both models performed similarly in predicting the target variable `recovery_time`. This implies that both regularization techniques, despite their differences in approach, yielded comparable predictive performance in this scenario.
+
+
 
 \newpage
 # Conclusions
