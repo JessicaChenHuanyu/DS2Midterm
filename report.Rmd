@@ -1,0 +1,19 @@
+---
+title: "Midterm Project Report"
+author: "Huanyu Chen, Yifei Liu, Longyu Zhang"
+output: pdf_document
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Exploratory Analysis and Data Visualization
+
+# Model Training
+
+# Result
+
+# Conclusion
+
+# Appendix
