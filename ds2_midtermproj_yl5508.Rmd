@@ -7,6 +7,7 @@ output: html_document
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
+library(corrplot)
 library(rsample)
 library(splines)
 library(lattice)
@@ -78,8 +79,13 @@ corrplot(cor(covid |> select(recovery_time, age, bmi, weight, height, ldl, sbp))
 
 ## Lasso
 
+Model assumption:\
+(a) Sparsity Assumption: Lasso assumes that the true model depends on only a small number of predictors, implying that the model is sparse.  This means it's suited for scenarios where only a few variables significantly impact the response variable.\
+(b) Regularization: By penalizing the magnitude of the coefficients (L1 penalty), Lasso encourages smaller absolute values of coefficients, thus reducing model complexity and the risk of overfitting.\
+
 ```{r warning = FALSE, message=FALSE}
 set.seed(11)
+
 ctrl = trainControl(method = 'cv', number = 10)
 ctrl_1se = trainControl(method = 'cv', number = 10, selectionFunction =  'oneSE')
 
@@ -129,6 +135,10 @@ rmse.lasso.1se = sqrt(mean((testing$recovery_time - pred.lasso.1se)^2))
 
 ## Elastic Net
 
+Model assumption:\
+(a) Combined Regularization: Elastic Net uses both L1 and L2 regularization, combining Lasso's variable selection capability with Ridge regression's ability to handle highly correlated predictors.\
+(b) Adjusting Regularization Balance: Elastic Net has two regularization parameters, controlling the overall strength of regularization and the weight balance between L1 and L2 terms. This offers more flexible model tuning capability.\
+
 ```{r}
 set.seed(11)
 ctrl = trainControl(method = 'cv', number = 10)
@@ -176,7 +186,49 @@ pred.enet.1se = predict(enet.fit.1se, newdata = testing)
 rmse.enet.1se = sqrt(mean((testing$recovery_time - pred.enet.1se)^2))
 ```
 
+## MARS
+
+Model assumption:\
+(a) Non-linearity and Interaction: MARS does not assume that relationships between the independent variables and the dependent variable are linear or follow a specific functional form. Instead, it adaptively fits piecewise linear regressions that can model complex non-linear relationships and interactions among variables.\
+(b) Distribution of Errors: MARS does not make specific assumptions about the distribution of error terms.\
+
+```{r message = FALSE, warning = FALSE}
+set.seed(11)
+mars_grid = expand.grid(degree = 1:5, nprune = 2:25)
+ctrl = trainControl(method = 'cv', number = 10)
+
+mars.fit = train(xtrain, ytrain, 
+                 method = "earth", 
+                 tuneGrid = mars_grid, 
+                 trControl = ctrl)
+ggplot(mars.fit) +
+  theme_bw()
+
+# fit of the model
+mars.fit$bestTune
+coef(mars.fit$finalModel)
+
+# partial dependence plot (PDP)
+p1 = pdp::partial(mars.fit, pred.var = c("height"), grid.resolution = 10) %>% autoplot()
+
+p2 = pdp::partial(mars.fit, pred.var = c("height", "weight"),
+grid.resolution = 10) %>%
+pdp::plotPartial(levelplot = FALSE, zlab = "yhat", drape = TRUE,
+screen = list(z = 20, x = -60))
+
+gridExtra::grid.arrange(p1, p2, ncol = 2)
+
+# test error (rmse)
+mars.test = predict(mars.fit, x = xtest)
+mars.rmse = mean((mars.test - ytest)^2)
+mars.rmse
+```
+
 ## GAM
+
+Model assumption:\
+(a) Additivity: The effect of each predictor on the response is additive. The total effect on the response variable is the sum of the effects of each predictor, modeled by its own smooth function.\
+(b) Smoothness of the Predictor Functions: The relationships between the predictors and the response can be adequately modeled using smooth functions. The degree of smoothness is usually determined by the data and is controlled by smoothing parameters, which can be estimated from the data itself.\
 
 ```{r}
 set.seed(11)
@@ -186,13 +238,19 @@ gam.fit = train(xtrain, ytrain,
 gam.fit$finalModel
 
 # plot (gam.fit)
-par(mar = c(4, 2, 1, 1), mfrow = c(4, 4))
+par(mar = c(4, 2, 1, 1), mfrow = c(2, 3))
 plot(gam.fit$finalModel)
-#plot(gam.fit$finalModel, residuals = TRUE, shade = TRUE)
 
 # test error (rmse)
 gam.test = predict(gam.fit, x = xtest)
 gam.rmse = mean((gam.test - ytest)^2)
 gam.rmse
 ```
+
+## Model Comparation
+
+```{r}
+bwplot(resamples(list(lasso = lasso.fit, lasso_1se = lasso.fit, enet = enet.fit, enet_1se = enet.fit.1se, mars = mars.fit, gam = gam.fit)), metric = "RMSE")
+```
+
 
