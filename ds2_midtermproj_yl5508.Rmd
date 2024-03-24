@@ -1,0 +1,198 @@
+---
+title: "ds2_miterm_yl5508"
+author: "Yifei Liu"
+date: 2023/03/22
+output: html_document
+---
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(rsample)
+library(splines)
+library(lattice)
+library(caret)
+library(pdp)
+library(gam)
+library(mgcv)
+library(caret)
+```
+
+## Data Wrangling
+
+```{r}
+load('~/data science II/midterm/recovery.RData')
+
+covid = as_tibble(dat) |>
+  na.omit() |>
+  janitor::clean_names() |>
+  mutate(gender = factor(gender), hypertension = factor(hypertension), diabetes = factor(diabetes), vaccine = factor(vaccine), severity = factor(severity)) |>
+  select(- id) |>
+  relocate(recovery_time)
+
+set.seed(11)
+covid_split = initial_split(covid, prop = 0.8)
+training = training(covid_split)
+testing = testing(covid_split)
+xtrain = model.matrix(recovery_time ~ ., training)[,-1]
+ytrain = training$recovery_time
+xtest = model.matrix(recovery_time ~ ., testing)[,-1]
+ytest = testing$recovery_time
+
+# showing connection between the response and other variables
+theme1 = trellis.par.get()
+theme1$plot.symbol$col = rgb(.2, .4, .2, .5)
+theme1$plot.symbol$pch = 16
+theme1$plot.line$col = rgb(.8, .1, .1, 1)
+theme1$plot.line$lwd = 2
+theme1$strip.background$col = rgb(.0, .2, .6, .2)
+trellis.par.set(theme1)
+
+par(mar = c(4, 2, 1, 1), mfrow = c(4, 4))
+x = model.matrix(recovery_time ~ age + bmi + weight + height + ldl + sbp, covid)[,-1]
+y = covid$recovery_time
+caret::featurePlot(x, y, plot = "scatter", labels = c("", "Y"), type = c("p"), layout = c(3, 2))
+```
+
+## Boxplot of Recovery Time by Smoking Status and Gender
+
+```{r}
+covid |>
+  ggplot(aes(x = race, y = recovery_time, fill = race)) +
+  geom_boxplot(alpha = 0.5) +
+  labs(
+    title = "Recovery Time by Race and Smoking Status",
+    x = "Race",
+    y = "Recovery Time"
+  ) +
+  guides(fill = guide_legend("Race")) +
+  theme_minimal() +
+  facet_grid(~ smoking) +
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
+```
+
+## Correlation Plot
+
+```{r}
+corrplot(cor(covid |> select(recovery_time, age, bmi, weight, height, ldl, sbp)), type = "upper", order = "AOE", diag = FALSE, title = "Correlation Plot of Variables", cex.main = 1.5, mar = c(0, 0, 1, 0))
+```
+
+## Lasso
+
+```{r warning = FALSE, message=FALSE}
+set.seed(11)
+ctrl = trainControl(method = 'cv', number = 10)
+ctrl_1se = trainControl(method = 'cv', number = 10, selectionFunction =  'oneSE')
+
+lasso.fit = train(recovery_time ~ ., data = training, 
+             method = 'glmnet', 
+             tuneGrid = expand.grid(alpha = 1, 
+                                    lambda = exp(seq(-2, 8, length = 100))), 
+             trControl = ctrl)
+
+plot(lasso.fit, xTrans = log)
+
+# selected lambda
+lasso.fit$bestTune$lambda
+
+# coefficients
+coef(lasso.fit$finalModel, s = lasso.fit$bestTune$lambda)
+
+# num of predictors
+sum(lasso.fit$coefname != 0)
+
+# test error (RMSE)
+pred.lasso = predict(lasso.fit, newdata = testing)
+rmse.lasso = sqrt(mean((training$recovery_time - pred.lasso)^2))
+
+# applying 1se rule
+lasso.fit.1se = train(recovery_time ~ ., data = training, 
+             method = 'glmnet', 
+             tuneGrid = expand.grid(alpha = 1, 
+                                    lambda = exp(seq(-2, 8, length = 100))), 
+             trControl = ctrl_1se)
+
+plot(lasso.fit.1se, xTrans = log)
+
+# selected alpha and lambda
+lasso.fit.1se$bestTune$lambda
+
+# coefficients
+coef(lasso.fit.1se$finalModel, s = lasso.fit.1se$bestTune$lambda)
+
+# num of predictors
+sum(lasso.fit.1se$coefname != 0)
+
+# test error (RMSE)
+pred.lasso.1se = predict(lasso.fit.1se, newdata = testing)
+rmse.lasso.1se = sqrt(mean((testing$recovery_time - pred.lasso.1se)^2))
+```
+
+## Elastic Net
+
+```{r}
+set.seed(11)
+ctrl = trainControl(method = 'cv', number = 10)
+ctrl_1se = trainControl(method = 'cv', number = 10, selectionFunction =  'oneSE')
+
+enet.fit = train(recovery_time ~ ., data = training, 
+             method = 'glmnet', 
+             tuneGrid = expand.grid(alpha = seq(0, 1, length = 21), 
+                                    lambda = exp(seq(-1, 10, length = 100))), 
+             trControl = ctrl)
+
+myCol = rainbow(25)
+myPar = list(superpose.symbol = list(col = myCol), superpose.line = list(col = myCol))
+
+plot(enet.fit, par.settings = myPar)
+
+# selected alpha and lambda
+enet.fit$bestTune
+
+# coefficients
+coef(enet.fit$finalModel, s = enet.fit$bestTune$lambda)
+
+# num of predictors
+sum(enet.fit$coefname != 0)
+
+# test error (RMSE)
+pred.enet = predict(enet.fit, newdata = testing)
+rmse.enet = sqrt(mean((testing$recovery_time - pred.enet)^2))
+
+# applying 1se rule
+set.seed(11)
+enet.fit.1se = train(recovery_time ~ ., data = training, 
+             method = 'glmnet', 
+             tuneGrid = expand.grid(alpha = seq(0, 1, length = 21), 
+                                    lambda = exp(seq(-1, 10, length = 100))), 
+             trControl = ctrl_1se)
+
+plot(enet.fit.1se, par.settings = myPar)
+
+# selected alpha and lambda
+enet.fit.1se$bestTune
+
+# test error (RMSE)
+pred.enet.1se = predict(enet.fit.1se, newdata = testing)
+rmse.enet.1se = sqrt(mean((testing$recovery_time - pred.enet.1se)^2))
+```
+
+## GAM
+
+```{r}
+set.seed(11)
+gam.fit = train(xtrain, ytrain, 
+                method = "gam", 
+                trControl = ctrl)
+gam.fit$finalModel
+
+# plot (gam.fit)
+par(mar = c(4, 2, 1, 1), mfrow = c(4, 4))
+plot(gam.fit$finalModel)
+#plot(gam.fit$finalModel, residuals = TRUE, shade = TRUE)
+
+# test error (rmse)
+gam.test = predict(gam.fit, x = xtest)
+gam.rmse = mean((gam.test - ytest)^2)
+gam.rmse
+```
+
