@@ -26,10 +26,10 @@ covid = as_tibble(dat) |>
   mutate(gender = factor(gender), 
          hypertension = factor(hypertension), 
          diabetes = factor(diabetes), 
-         vaccine = factor(vaccine, levels = c(0, 1), labels = c("Not vaccinated", "Vaccinated")), 
-         severity = factor(severity, levels = c(0, 1), labels = c("Not severe", "Severe")), 
-         race = factor(race, levels = c(1, 2, 3, 4), labels = c("White", "Asian", "Black", "Hispanic")), 
-         smoking = factor(smoking, levels = c(0, 1, 2), labels = c("Never smoked", "Former smoker", "Current smoker"))) |>
+         vaccine = factor(vaccine), 
+         severity = factor(severity), 
+         race = factor(race), 
+         smoking = factor(smoking)) |>
   select(- id) |>
   relocate(recovery_time)
 
@@ -62,6 +62,8 @@ caret::featurePlot(x, y, plot = "scatter", labels = c("", "Y"), type = c("p"), l
 ```{r}
 # Boxplot
 covid |>
+  mutate(race = factor(race, levels = c(1, 2, 3, 4), labels = c("White", "Asian", "Black", "Hispanic")), 
+         smoking = factor(smoking, levels = c(0, 1, 2), labels = c("Never smoked", "Former smoker", "Current smoker"))) |>
   ggplot(aes(x = race, y = recovery_time, fill = race)) +
   geom_boxplot(alpha = 0.5) +
   labs(
@@ -78,6 +80,8 @@ covid |>
 ```{r}
 # Ridge plots
 covid |>
+  mutate(race = factor(race, levels = c(1, 2, 3, 4), labels = c("White", "Asian", "Black", "Hispanic")), 
+         smoking = factor(smoking, levels = c(0, 1, 2), labels = c("Never smoked", "Former smoker", "Current smoker"))) |>
   ggplot(aes(y = race, x = recovery_time, fill = race)) +
   geom_density_ridges(alpha = 0.5) +
   labs(
@@ -94,6 +98,8 @@ covid |>
 ```{r}
 # Boxplot
 covid |>
+  mutate(vaccine = factor(vaccine, levels = c(0, 1), labels = c("Not vaccinated", "Vaccinated")), 
+         severity = factor(severity, levels = c(0, 1), labels = c("Not severe", "Severe"))) |>
   ggplot(aes(x = severity, y = recovery_time, fill = severity)) +
   geom_boxplot(alpha = 0.5) +
   labs(
@@ -110,6 +116,8 @@ covid |>
 ```{r}
 # Ridge plots
 covid |>
+  mutate(vaccine = factor(vaccine, levels = c(0, 1), labels = c("Not vaccinated", "Vaccinated")), 
+         severity = factor(severity, levels = c(0, 1), labels = c("Not severe", "Severe"))) |>
   ggplot(aes(y = severity, x = recovery_time, fill = severity)) +
   geom_density_ridges(alpha = 0.5) +
   labs(
@@ -296,10 +304,10 @@ mars.fit$bestTune
 coef(mars.fit$finalModel)
 
 # partial dependence plot (PDP)
-p1 = pdp::partial(mars.fit, pred.var = c("bmi"), grid.resolution = 10) %>% autoplot()
+p1 = pdp::partial(mars.fit, pred.var = c("bmi"), grid.resolution = 10) |> autoplot()
 
 p2 = pdp::partial(mars.fit, pred.var = c("bmi", "race2"),
-grid.resolution = 10) %>%
+grid.resolution = 10) |>
 pdp::plotPartial(levelplot = FALSE, zlab = "yhat", drape = TRUE,
 screen = list(z = 20, x = -60))
 
@@ -337,13 +345,51 @@ gam.rmse
 ## Model Comparation
 
 ```{r}
-bwplot(resamples(list(lasso = lasso.fit, 
+library(patchwork)
+res = resamples(list(lasso = lasso.fit, 
                       lasso_1se = lasso.fit.1se, 
                       enet = enet.fit, 
                       enet_1se = enet.fit.1se, 
                       mars = mars.fit, 
-                      gam = gam.fit)), 
-       metric = "RMSE")
+                      gam = gam.fit))$value |>
+  tibble() |>
+  janitor::clean_names() |>
+  select(- resample) |>
+  pivot_longer(
+    everything(),
+    names_to = c(".value", "metric"),
+    names_pattern = "(.*)_(.*)"
+  ) |>
+  pivot_longer(c(2:7), names_to = "model", values_to = "result")
+
+plot_rmse = res |>
+  filter(metric == "rmse") |>
+  ggplot(aes(x = model, y = result, fill = model)) +
+  geom_boxplot(alpha = 0.5) +
+  labs(y = "RMSE") +
+  theme_minimal() +
+  guides(fill = guide_legend("Model"))
+
+plot_r_squared = res |>
+  filter(metric == "rsquared") |>
+  ggplot(aes(x = model, y = result, fill = model)) +
+  geom_boxplot(alpha = 0.5) +
+  labs(y = "R squared") +
+  theme_minimal() +
+  guides(fill = guide_legend("Model"))
+
+plot_mae = res |>
+  filter(metric == "mae") |>
+  ggplot(aes(x = model, y = result, fill = model)) +
+  geom_boxplot(alpha = 0.5) +
+  labs(y = "MAE") +
+  theme_minimal() +
+  guides(fill = guide_legend("Model"))
+
+final_plot = plot_rmse + plot_r_squared + plot_mae +
+  plot_layout(ncol = 1) + 
+  plot_annotation(title = "Results by Models and Metrics",
+                  theme = theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5)))
 ```
 
 
