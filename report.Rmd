@@ -1,12 +1,17 @@
 ---
 title: "Midterm Project Report"
 author: "Huanyu Chen, Yifei Liu, Longyu Zhang"
-output: pdf_document
+output: 
+  pdf_document:
+    number_sections: true
+abstract: This study examines the predictive performance of various data science models in estimating recovery time from COVID-19 based on demographic and health-related factors. The dataset includes variables such as age, BMI, and smoking status. The techniques used include LASSO regression, PLS, MARS, and GAM. The results show that LASSO and PLS models had similar predictive accuracies and MARS outperformed GAM. The importance of considering both linear and nonlinear relationships when modeling recovery time is underscored by the findings. This has implications for clinical decision-making and resource allocation in COVID-19 management.
 ---
 
 ```{r, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+# Introduction
 
 # Exploratory Analysis and Data Visualization
 
