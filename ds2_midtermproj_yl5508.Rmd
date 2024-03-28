@@ -7,12 +7,13 @@ output: html_document
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
+library(ggridges)
 library(corrplot)
 library(rsample)
-library(splines)
 library(lattice)
 library(caret)
 library(pls)
+
 library(pdp)
 library(gam)
 library(mgcv)
@@ -27,7 +28,13 @@ load('~/data science II/midterm/recovery.RData')
 covid = as_tibble(dat) |>
   na.omit() |>
   janitor::clean_names() |>
-  mutate(gender = factor(gender), hypertension = factor(hypertension), diabetes = factor(diabetes), vaccine = factor(vaccine), severity = factor(severity)) |>
+  mutate(gender = factor(gender), 
+         hypertension = factor(hypertension), 
+         diabetes = factor(diabetes), 
+         vaccine = factor(vaccine, levels = c(0, 1), labels = c("Not vaccinated", "Vaccinated")), 
+         severity = factor(severity, levels = c(0, 1), labels = c("Not severe", "Severe")), 
+         race = factor(race, levels = c(1, 2, 3, 4), labels = c("White", "Asian", "Black", "Hispanic")), 
+         smoking = factor(smoking, levels = c(0, 1, 2), labels = c("Never smoked", "Former smoker", "Current smoker"))) |>
   select(- id) |>
   relocate(recovery_time)
 
@@ -58,17 +65,66 @@ caret::featurePlot(x, y, plot = "scatter", labels = c("", "Y"), type = c("p"), l
 ## Boxplot of Recovery Time by Smoking Status and Gender
 
 ```{r}
+# Boxplot
 covid |>
   ggplot(aes(x = race, y = recovery_time, fill = race)) +
   geom_boxplot(alpha = 0.5) +
   labs(
     title = "Recovery Time by Race and Smoking Status",
-    x = "Race",
+    x = "Smoking",
     y = "Recovery Time"
   ) +
   guides(fill = guide_legend("Race")) +
   theme_minimal() +
   facet_grid(~ smoking) +
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
+```
+
+```{r}
+# Ridge plots
+covid |>
+  ggplot(aes(y = race, x = recovery_time, fill = race)) +
+  geom_density_ridges(alpha = 0.5) +
+  labs(
+    title = "Recovery Time by Race and Smoking Status",
+    x = "Smoking",
+    y = "Recovery Time"
+  ) +
+  guides(fill = guide_legend("Race")) +
+  theme_minimal() +
+  facet_grid(~ smoking) +
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
+```
+
+```{r}
+# Boxplot
+covid |>
+  ggplot(aes(x = severity, y = recovery_time, fill = severity)) +
+  geom_boxplot(alpha = 0.5) +
+  labs(
+    title = "Recovery Time by Vaccine and Severity",
+    x = "Vaccine",
+    y = "Recovery Time"
+  ) +
+  guides(fill = guide_legend("Severity")) +
+  theme_minimal() +
+  facet_grid(~ vaccine) +
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
+```
+
+```{r}
+# Ridge plots
+covid |>
+  ggplot(aes(y = severity, x = recovery_time, fill = severity)) +
+  geom_density_ridges(alpha = 0.5) +
+  labs(
+    title = "Recovery Time by Vaccine and Severity",
+    x = "Vaccine",
+    y = "Recovery Time"
+  ) +
+  guides(fill = guide_legend("Severity")) +
+  theme_minimal() +
+  facet_grid(~ vaccine) +
   theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
 ```
 
@@ -94,7 +150,7 @@ ctrl_1se = trainControl(method = 'cv', number = 10, selectionFunction =  'oneSE'
 lasso.fit = train(recovery_time ~ ., data = training, 
              method = 'glmnet', 
              tuneGrid = expand.grid(alpha = 1, 
-                                    lambda = exp(seq(-5, 3, length = 100))), 
+                                    lambda = exp(seq(-5, -2, length = 100))), 
              trControl = ctrl)
 
 plot(lasso.fit, xTrans = log)
@@ -110,13 +166,16 @@ sum(lasso.fit$coefname != 0)
 
 # test error (RMSE)
 pred.lasso = predict(lasso.fit, newdata = testing)
-rmse.lasso = sqrt(mean((training$recovery_time - pred.lasso)^2))
+rmse.lasso = sqrt(mean((testing$recovery_time - pred.lasso)^2))
+rmse.lasso
+```
 
+```{r warning = FALSE, message=FALSE}
 # applying 1se rule
 lasso.fit.1se = train(recovery_time ~ ., data = training, 
              method = 'glmnet', 
              tuneGrid = expand.grid(alpha = 1, 
-                                    lambda = exp(seq(-2, 8, length = 100))), 
+                                    lambda = exp(seq(-5, -2, length = 100))), 
              trControl = ctrl_1se)
 
 plot(lasso.fit.1se, xTrans = log)
@@ -133,6 +192,7 @@ sum(lasso.fit.1se$coefname != 0)
 # test error (RMSE)
 pred.lasso.1se = predict(lasso.fit.1se, newdata = testing)
 rmse.lasso.1se = sqrt(mean((testing$recovery_time - pred.lasso.1se)^2))
+rmse.lasso.1se
 ```
 
 ## Elastic Net
@@ -149,7 +209,7 @@ ctrl_1se = trainControl(method = 'cv', number = 10, selectionFunction =  'oneSE'
 enet.fit = train(recovery_time ~ ., data = training, 
              method = 'glmnet', 
              tuneGrid = expand.grid(alpha = seq(0, 1, length = 21), 
-                                    lambda = exp(seq(-8, 2, length = 100))), 
+                                    lambda = exp(seq(-8, 0, length = 100))), 
              trControl = ctrl)
 
 myCol = rainbow(25)
@@ -169,13 +229,17 @@ sum(enet.fit$coefname != 0)
 # test error (RMSE)
 pred.enet = predict(enet.fit, newdata = testing)
 rmse.enet = sqrt(mean((testing$recovery_time - pred.enet)^2))
+rmse.enet
+```
 
+
+```{r}
 # applying 1se rule
 set.seed(11)
 enet.fit.1se = train(recovery_time ~ ., data = training, 
              method = 'glmnet', 
              tuneGrid = expand.grid(alpha = seq(0, 1, length = 21), 
-                                    lambda = exp(seq(-1, 10, length = 100))), 
+                                    lambda = exp(seq(-8, 0, length = 100))), 
              trControl = ctrl_1se)
 
 plot(enet.fit.1se, par.settings = myPar)
@@ -186,6 +250,7 @@ enet.fit.1se$bestTune
 # test error (RMSE)
 pred.enet.1se = predict(enet.fit.1se, newdata = testing)
 rmse.enet.1se = sqrt(mean((testing$recovery_time - pred.enet.1se)^2))
+rmse.enet.1se
 ```
 
 ## PLS
@@ -196,8 +261,7 @@ Model assumptions:\
 
 ```{r}
 set.seed(11)
-pls = plsr(recovery_time ~ ., data = training, 
-           scale = TRUE, validation = 'CV')
+pls = plsr(recovery_time ~ ., data = training, scale = TRUE, validation = 'CV')
 summary(pls)
 
 validationplot(pls, val.type = 'MSEP', legendpos = 'topright')
@@ -207,10 +271,10 @@ cv.mse = RMSEP(pls)
 # num of components
 ncomp.cv = which.min(cv.mse$val[1,,]) - 1
 
-# test error (MSE)
-pred.pls = predict(pls, newdata = testing,
-ncomp = ncomp.cv)
-sqrt(mean((testing$recovery_time - pred.pls)^2))
+# test error (RMSE)
+pred.pls = predict(pls, newdata = testing, ncomp = ncomp.cv)
+pls.rmse = sqrt(mean((testing$recovery_time - pred.pls)^2))
+pls.rmse
 ```
 
 ## MARS
@@ -221,13 +285,14 @@ Model assumptions:\
 
 ```{r message = FALSE, warning = FALSE}
 set.seed(11)
-mars_grid = expand.grid(degree = 1:5, nprune = 2:25)
+mars_grid = expand.grid(degree = 1:6, nprune = 2:15)
 ctrl = trainControl(method = 'cv', number = 10)
 
 mars.fit = train(xtrain, ytrain, 
                  method = "earth", 
                  tuneGrid = mars_grid, 
                  trControl = ctrl)
+
 ggplot(mars.fit) +
   theme_bw()
 
@@ -236,9 +301,9 @@ mars.fit$bestTune
 coef(mars.fit$finalModel)
 
 # partial dependence plot (PDP)
-p1 = pdp::partial(mars.fit, pred.var = c("height"), grid.resolution = 10) %>% autoplot()
+p1 = pdp::partial(mars.fit, pred.var = c("bmi"), grid.resolution = 10) %>% autoplot()
 
-p2 = pdp::partial(mars.fit, pred.var = c("height", "weight"),
+p2 = pdp::partial(mars.fit, pred.var = c("bmi", "race2"),
 grid.resolution = 10) %>%
 pdp::plotPartial(levelplot = FALSE, zlab = "yhat", drape = TRUE,
 screen = list(z = 20, x = -60))
@@ -247,7 +312,7 @@ gridExtra::grid.arrange(p1, p2, ncol = 2)
 
 # test error (rmse)
 mars.test = predict(mars.fit, x = xtest)
-mars.rmse = mean((mars.test - ytest)^2)
+mars.rmse = sqrt(mean((mars.test - ytest)^2))
 mars.rmse
 ```
 
@@ -270,14 +335,20 @@ plot(gam.fit$finalModel)
 
 # test error (rmse)
 gam.test = predict(gam.fit, x = xtest)
-gam.rmse = mean((gam.test - ytest)^2)
+gam.rmse = sqrt(mean((gam.test - ytest)^2))
 gam.rmse
 ```
 
 ## Model Comparation
 
 ```{r}
-bwplot(resamples(list(lasso = lasso.fit, lasso_1se = lasso.fit, enet = enet.fit, enet_1se = enet.fit.1se, mars = mars.fit, gam = gam.fit)), metric = "RMSE")
+bwplot(resamples(list(lasso = lasso.fit, 
+                      lasso_1se = lasso.fit, 
+                      enet = enet.fit, 
+                      enet_1se = enet.fit.1se, 
+                      mars = mars.fit, 
+                      gam = gam.fit)), 
+       metric = "RMSE")
 ```
 
 
