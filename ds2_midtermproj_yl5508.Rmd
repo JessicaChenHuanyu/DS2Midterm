@@ -13,11 +13,6 @@ library(rsample)
 library(lattice)
 library(caret)
 library(pls)
-
-library(pdp)
-library(gam)
-library(mgcv)
-library(caret)
 ```
 
 ## Data Wrangling
@@ -343,7 +338,7 @@ gam.rmse
 
 ```{r}
 bwplot(resamples(list(lasso = lasso.fit, 
-                      lasso_1se = lasso.fit, 
+                      lasso_1se = lasso.fit.1se, 
                       enet = enet.fit, 
                       enet_1se = enet.fit.1se, 
                       mars = mars.fit, 
