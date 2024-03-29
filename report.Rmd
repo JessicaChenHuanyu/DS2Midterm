@@ -1,7 +1,9 @@
 ---
 title: "Midterm Project Report"
 author: "Huanyu Chen, Yifei Liu, Longyu Zhang"
-output: html_document
+output: 
+  pdf_document:
+    number_sections: true
 abstract: This study examines the predictive performance of various data science models in estimating recovery time from COVID-19 based on demographic and health-related factors. The techniques used include LASSO regression, Elastic Net, PLS, MARS, GAM, and Random Forest. The results show that MARS has the best predictive performance among all the methods. Our findings underscore the importance of considering both linear and nonlinear relationships in modeling recovery time. Moreover, our findings can have implications for clinical decision-making and resource allocation in COVID-19 management.
 ---
 
@@ -15,6 +17,8 @@ library(lattice)
 library(caret)
 library(pls)
 library(patchwork)
+library(rpart)
+library(rpart.plot)
 
 load("recovery.Rdata")
 covid = as_tibble(dat) |>
@@ -264,8 +268,6 @@ final_plot = plot_rmse + plot_r_squared + plot_mae +
 
 final_plot
 ```
-
-
 
 # Result
 
