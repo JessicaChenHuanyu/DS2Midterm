@@ -62,7 +62,7 @@ The correlation analysis conducted on variables including "height," "weight," an
 ```{r}
 correlation_matrix <- cor(dat[, c("age", "height", "weight", "bmi",
                                   "SBP", "LDL", "recovery_time")])
-corrplot(correlation_matrix, method = "color")
+corrplot::corrplot(correlation_matrix, method = "color")
 ```
 
 \newpage
@@ -85,13 +85,12 @@ cv.lasso <- cv.glmnet(as.matrix(trainData[, -ncol(trainData)]),
 plot(cv.lasso)
 selected_lambda <- cv.lasso$lambda.min
 selected_lambda
-coefficients_min <- coef(cv.lasso, s = selected_lambda)
+coefficients_min <- coef(cv.lasso$finalModel, s = selected_lambda)
 num_predictors_min <- sum(coefficients_min != 0)
 
 test_predictions <- predict(cv.lasso, newx = as.matrix(testData[, -ncol(testData)]),
                             s = selected_lambda, type = "response")
 test_error <- sqrt(mean((test_predictions - testData$recovery_time)^2))
-print(test_error)
 ```
 
 ## PLS Model
@@ -119,7 +118,7 @@ library(earth)
 ```{r}
 ctrl1 <- trainControl(method = "cv", number = 5)
 set.seed(11)
-mars_grid <- expand.grid(degree = 1:4, nprune = 1:20)
+mars_grid <- expand.grid(degree = 1:4, nprune = 2:12)
 mars.fit <- train(recovery_time ~ ., 
                   data = trainData, 
                   method = "earth",
