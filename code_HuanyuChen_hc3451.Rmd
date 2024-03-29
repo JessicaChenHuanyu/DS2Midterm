@@ -10,6 +10,17 @@ library(tidyverse)
 library(corrplot)
 
 load("recovery.Rdata")
+dat = as_tibble(dat) |>
+  na.omit() |>
+  mutate(gender = factor(gender), 
+         hypertension = factor(hypertension), 
+         diabetes = factor(diabetes), 
+         vaccine = factor(vaccine), 
+         severity = factor(severity), 
+         race = factor(race), 
+         smoking = factor(smoking)) |>
+  select(- id) |>
+  relocate(recovery_time)
 ```
 
 # Exploratory Analysis and Data Visualization
@@ -62,7 +73,7 @@ library(caret)
 library(glmnet)
 library(pls)
 
-set.seed(2024)
+set.seed(11)
 indexTrain <- createDataPartition(y = dat$recovery_time, p = 0.8, list = FALSE)
 trainData <- dat[indexTrain, ]
 testData <- dat[-indexTrain, ]
@@ -70,9 +81,10 @@ testData <- dat[-indexTrain, ]
 cv.lasso <- cv.glmnet(as.matrix(trainData[, -ncol(trainData)]),
                       trainData$recovery_time, 
                       alpha = 1, 
-                      lambda = exp(seq(5, -5, length = 100)))
+                      lambda = exp(seq(4, -2, length = 100)))
 plot(cv.lasso)
 selected_lambda <- cv.lasso$lambda.min
+selected_lambda
 coefficients_min <- coef(cv.lasso, s = selected_lambda)
 num_predictors_min <- sum(coefficients_min != 0)
 
@@ -84,7 +96,7 @@ print(test_error)
 
 ## PLS Model
 ```{r}
-set.seed(2024)
+set.seed(11)
 pls_model <- plsr(recovery_time ~ ., data = trainData,
                   scale = TRUE, validation = "CV")
 
@@ -106,7 +118,7 @@ library(earth)
 ## MARS
 ```{r}
 ctrl1 <- trainControl(method = "cv", number = 5)
-set.seed(2024)
+set.seed(11)
 mars_grid <- expand.grid(degree = 1:4, nprune = 1:20)
 mars.fit <- train(recovery_time ~ ., 
                   data = trainData, 
@@ -137,7 +149,7 @@ print(rmse)
 ## GAM
 For the variables `height` and `bmi,` the residuals in the plots suggest that there appears to be some curvature or non-linearity in the relationship to `recovery_time`. Therefore, when modeling these variables, it may be necessary to consider more flexible approaches, such as including polynomial terms or using non-linear transformations to better capture the underlying relationship with the outcome variable.
 ```{r}
-set.seed(2024)
+set.seed(11)
 gam.fit <- train(recovery_time ~ ., 
                  data = trainData, 
                  method = "gam",
