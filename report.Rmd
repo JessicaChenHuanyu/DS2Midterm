@@ -4,16 +4,80 @@ author: "Huanyu Chen, Yifei Liu, Longyu Zhang"
 output: 
   pdf_document:
     number_sections: true
-abstract: This study examines the predictive performance of various data science models in estimating recovery time from COVID-19 based on demographic and health-related factors. The dataset includes variables such as age, BMI, and smoking status. The techniques used include LASSO regression, PLS, MARS, and GAM. The results show that LASSO and PLS models had similar predictive accuracies and MARS outperformed GAM. The importance of considering both linear and nonlinear relationships when modeling recovery time is underscored by the findings. This has implications for clinical decision-making and resource allocation in COVID-19 management.
+abstract: This study examines the predictive performance of various data science models in estimating recovery time from COVID-19 based on demographic and health-related factors. The techniques used include LASSO regression, Elastic Net, PLS, MARS, GAM, and Random Forest. The results show that MARS has the best predictive performance among all the methods. Our findings underscore the importance of considering both linear and nonlinear relationships in modeling recovery time. Moreover, our findings can have implications for clinical decision-making and resource allocation in COVID-19 management.
 ---
 
-```{r, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r message=FALSE, warning = FALSE, echo=FALSE}
+library(tidyverse)
+library(corrplot)
+library(ggridges)
+library(corrplot)
+library(rsample)
+library(lattice)
+library(caret)
+library(pls)
+
+load("recovery.Rdata")
+covid = as_tibble(dat) |>
+  na.omit() |>
+  janitor::clean_names() |>
+  mutate(gender = factor(gender), 
+         hypertension = factor(hypertension), 
+         diabetes = factor(diabetes), 
+         vaccine = factor(vaccine), 
+         severity = factor(severity), 
+         race = factor(race), 
+         smoking = factor(smoking)) |>
+  select(- id) |>
+  relocate(recovery_time)
+
+set.seed(11)
+covid_split = initial_split(covid, prop = 0.8)
+training = training(covid_split)
+testing = testing(covid_split)
+xtrain = model.matrix(recovery_time ~ ., training)[,-1]
+ytrain = training$recovery_time
+xtest = model.matrix(recovery_time ~ ., testing)[,-1]
+ytest = testing$recovery_time
+
+# showing connection between the response and other variables
+theme1 = trellis.par.get()
+theme1$plot.symbol$col = rgb(.2, .4, .2, .5)
+theme1$plot.symbol$pch = 16
+theme1$plot.line$col = rgb(.8, .1, .1, 1)
+theme1$plot.line$lwd = 2
+theme1$strip.background$col = rgb(.0, .2, .6, .2)
+trellis.par.set(theme1)
 ```
 
-# Introduction
-
 # Exploratory Analysis and Data Visualization
+
+## Variable Types
+
+In this dataset, `age`, `height`, `weight`, `bmi`, `SBP`, `LDL`, and `recovery_time` are continuous variables.
+
+## Boxplot of Recovery Time by Smoking Status and Gender
+
+Our analysis reveals a notable trend: across all smoking statuses, females (`gender` = 0) consistently exhibit longer recovery times compared to males. Interestingly, individuals who had never smoked had more outliers on the right side of the boxplot, suggesting a longer recovery time. This counter-intuitive finding suggests that individuals with healthier lifestyles, such as non-smokers, paradoxically require more time to recover from COVID-19.
+
+```{r echo=FALSE, fig.width=4, fig.height=3}
+par(mfrow = c(4, 4))
+x = model.matrix(recovery_time ~ age + bmi + weight + height + ldl + sbp, covid)[,-1]
+y = covid$recovery_time
+caret::featurePlot(x, y, plot = "scatter", labels = c("", "Recovery Time"), type = c("p"), layout = c(3, 2))
+```
+
+```{r echo=FALSE, fig.width=6, fig.height=3}
+ggplot(covid, aes(x = recovery_time, fill = factor(gender))) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Recovery Time by Smoking Status and Gender",
+       x = "Recovery Time", y = "Smoking Status",
+       fill = "Gender") +
+  facet_wrap(~factor(smoking), ncol = 1) +
+  theme_bw()
+correlation_matrix <- cor(covid[, c("age", "height", "weight", "bmi", "sbp", "ldl", "recovery_time")])
+corrplot::corrplot(correlation_matrix, method = "color")
+```
 
 # Model Training
 
