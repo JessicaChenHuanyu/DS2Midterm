@@ -2,6 +2,41 @@
 title: "P8106_midterm"
 author: "lz2951"
 date: "2024-03-28"
-output: pdf_document
+output: 
+  pdf_document:
+    latex_engine: xelatex
+header-includes:
+  - \usepackage{amssymb}
 ---
+
+```{r}
+library(tidyverse)
+```
+
+# Import Data
+
+```{r}
+load("recovery.RData")
+
+str(dat)
+
+recovery = dat |>
+  janitor::clean_names() |>
+  mutate(gender = as.factor(gender), 
+         hypertension = as.factor(hypertension),
+         diabetes = as.factor(diabetes),
+         vaccine = as.factor(vaccine),
+         severity = as.factor(severity),
+         study = as.factor(study))
+
+str(recovery)
+```
+
+# Exploratory analysis and data visualization
+
+```{r}
+skimr::skim(recovery) |>
+  select(-numeric.hist)
+```
+
 
