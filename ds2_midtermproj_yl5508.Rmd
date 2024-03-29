@@ -220,7 +220,7 @@ enet.fit = train(recovery_time ~ ., data = training,
 myCol = rainbow(25)
 myPar = list(superpose.symbol = list(col = myCol), superpose.line = list(col = myCol))
 
-plot(enet.fit, par.settings = myPar)
+plot(enet.fit, par.settings = myPar, xTrans = log)
 
 # selected alpha and lambda
 enet.fit$bestTune
@@ -247,7 +247,7 @@ enet.fit.1se = train(recovery_time ~ ., data = training,
                                     lambda = exp(seq(-8, 0, length = 100))), 
              trControl = ctrl_1se)
 
-plot(enet.fit.1se, par.settings = myPar)
+plot(enet.fit.1se, par.settings = myPar, xTrans = log)
 
 # selected alpha and lambda
 enet.fit.1se$bestTune
