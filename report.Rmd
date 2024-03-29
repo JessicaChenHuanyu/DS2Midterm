@@ -1,9 +1,7 @@
 ---
 title: "Midterm Project Report"
 author: "Huanyu Chen, Yifei Liu, Longyu Zhang"
-output: 
-  pdf_document:
-    number_sections: true
+output: html_document
 abstract: This study examines the predictive performance of various data science models in estimating recovery time from COVID-19 based on demographic and health-related factors. The techniques used include LASSO regression, Elastic Net, PLS, MARS, GAM, and Random Forest. The results show that MARS has the best predictive performance among all the methods. Our findings underscore the importance of considering both linear and nonlinear relationships in modeling recovery time. Moreover, our findings can have implications for clinical decision-making and resource allocation in COVID-19 management.
 ---
 
@@ -17,8 +15,6 @@ library(lattice)
 library(caret)
 library(pls)
 library(patchwork)
-library(rpart)
-library(rpart.plot)
 
 load("recovery.Rdata")
 covid = as_tibble(dat) |>
@@ -63,24 +59,7 @@ In this dataset, `age`, `height`, `weight`, `bmi`, `SBP`, `LDL`, and `recovery_t
 
 Our analysis reveals a notable trend: across all smoking statuses, females (`gender` = 0) consistently exhibit longer recovery times compared to males. Interestingly, individuals who had never smoked had more outliers on the right side of the boxplot, suggesting a longer recovery time. This counter-intuitive finding suggests that individuals with healthier lifestyles, such as non-smokers, paradoxically require more time to recover from COVID-19.
 
-```{r echo=FALSE, fig.width=4, fig.height=3}
-par(mfrow = c(4, 4))
-x = model.matrix(recovery_time ~ age + bmi + weight + height + ldl + sbp, covid)[,-1]
-y = covid$recovery_time
-caret::featurePlot(x, y, plot = "scatter", labels = c("", "Recovery Time"), type = c("p"), layout = c(3, 2))
-```
-
-```{r echo=FALSE, fig.width=6, fig.height=3}
-ggplot(covid, aes(x = recovery_time, fill = factor(gender))) +
-  geom_boxplot() +
-  labs(title = "Boxplot of Recovery Time by Smoking Status and Gender",
-       x = "Recovery Time", y = "Smoking Status",
-       fill = "Gender") +
-  facet_wrap(~factor(smoking), ncol = 1) +
-  theme_bw()
-correlation_matrix <- cor(covid[, c("age", "height", "weight", "bmi", "sbp", "ldl", "recovery_time")])
-corrplot::corrplot(correlation_matrix, method = "color")
-```
+<div style="text-align: center;"><img src="midterm_intro_3.png" style="width:150%"></div>\
 
 # Model Training
 
@@ -218,7 +197,7 @@ ggplot(ctree.fit, highlight = TRUE) + theme_bw()
 
 ## Model Comparation
 
-```{r echo=FALSE, fig.width=15, fig.height=10}
+```{r echo=FALSE, fig.width=15, fig.height=8}
 res = resamples(list(lasso = lasso.fit, 
                      lasso_1se = lasso.fit.1se, 
                      enet = enet.fit, 
@@ -268,6 +247,8 @@ final_plot = plot_rmse + plot_r_squared + plot_mae +
 
 final_plot
 ```
+
+
 
 # Result
 
