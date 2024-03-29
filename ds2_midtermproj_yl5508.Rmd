@@ -13,6 +13,8 @@ library(rsample)
 library(lattice)
 library(caret)
 library(pls)
+library(rpart)
+library(rpart.plot)
 ```
 
 ## Data Wrangling
@@ -342,16 +344,76 @@ gam.rmse = sqrt(mean((gam.test - ytest)^2))
 gam.rmse
 ```
 
+## Random Forest
+
+Model assumptions:\
+
+```{r}
+set.seed(11)
+rf.fit.1 = rpart(recovery_time ~ ., data = training, 
+               control = rpart.control(cp = 0.003))
+rpart.plot(rf.fit.1)
+printcp(rf.fit.1)
+plotcp(rf.fit.1)
+
+cptable = rf.fit.1$cptable
+minErr = which.min(cptable[,4])
+rf.fit.final = rpart::prune(rf.fit.1, cp = cptable[minErr,1])
+rpart.plot(rf.fit.final)
+plotcp(rf.fit.final)
+
+# test error
+rf.test = predict(rf.fit.final, x = xtest)
+rf.rmse = sqrt(mean((rf.test - ytest)^2))
+rf.rmse
+
+rf.r2.res = sum((ytest - rf.test)^2)
+rf.r2.tot = sum((ytest - mean(ytest))^2)
+rf.r2 = 1 - (rf.r2.res/rf.r2.tot)
+
+rf.mae = mean(abs(rf.test - ytest))
+```
+
+```{r}
+set.seed(11)
+rf.fit = train(xtrain, ytrain, 
+               method = "rf", 
+               trControl = ctrl, 
+               tuneGrid = expand.grid(mtry = 1:10))
+
+ctree.fit = train(recovery_time ~ ., training, 
+                  method = "ctree", 
+                  tuneGrid = data.frame(mincriterion = 1-exp(seq(-6, -2, length = 100))), 
+                  trControl = ctrl)
+
+# plot
+ggplot(rf.fit, highlight = TRUE) + theme_bw()
+ggplot(ctree.fit, highlight = TRUE) + theme_bw()
+plot(ctree.fit$finalModel)
+
+# test error (rmse)
+rf.test = predict(rf.fit, x = xtest)
+rf.rmse = sqrt(mean((rf.test - ytest)^2))
+rf.rmse
+
+ctree.test = predict(ctree.fit, x = xtest)
+ctree.rmse = sqrt(mean((ctree.test - ytest)^2))
+ctree.rmse
+```
+
+
 ## Model Comparation
 
 ```{r}
 library(patchwork)
 res = resamples(list(lasso = lasso.fit, 
-                      lasso_1se = lasso.fit.1se, 
-                      enet = enet.fit, 
-                      enet_1se = enet.fit.1se, 
-                      mars = mars.fit, 
-                      gam = gam.fit))$value |>
+                     lasso_1se = lasso.fit.1se, 
+                     enet = enet.fit, 
+                     enet_1se = enet.fit.1se, 
+                     mars = mars.fit, 
+                     gam = gam.fit, 
+                     rf = rf.fit, 
+                     rf_ctree = ctree.fit))$value |>
   tibble() |>
   janitor::clean_names() |>
   select(- resample) |>
@@ -360,7 +422,7 @@ res = resamples(list(lasso = lasso.fit,
     names_to = c(".value", "metric"),
     names_pattern = "(.*)_(.*)"
   ) |>
-  pivot_longer(c(2:7), names_to = "model", values_to = "result")
+  pivot_longer(c(2:9), names_to = "model", values_to = "result")
 
 plot_rmse = res |>
   filter(metric == "rmse") |>
@@ -392,7 +454,7 @@ final_plot = plot_rmse + plot_r_squared + plot_mae +
                   theme = theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5)))
 ```
 
-```{r fig.width=12, fig.height=6}
+```{r fig.width=15, fig.height=6}
 final_plot
 ```
 
