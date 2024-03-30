@@ -91,10 +91,6 @@ lasso.fit = train(recovery_time ~ ., data = training,
                                     lambda = exp(seq(-5, -2, length = 100))), 
              trControl = ctrl)
 
-plot(lasso.fit, xTrans = log)
-```
-
-```{r echo=FALSE, warning = FALSE, message=FALSE}
 # applying 1se rule
 lasso.fit.1se = train(recovery_time ~ ., data = training, 
              method = 'glmnet', 
@@ -102,7 +98,9 @@ lasso.fit.1se = train(recovery_time ~ ., data = training,
                                     lambda = exp(seq(-5, -2, length = 100))), 
              trControl = ctrl_1se)
 
-plot(lasso.fit.1se, xTrans = log)
+par(mfrow=c(1,2))
+plot(lasso.fit, xTrans = log, main = "Lasso Fit")
+plot(lasso.fit.1se, xTrans = log, main = "Lasso Fit (1 SE)")
 ```
 
 ## Elastic Net
