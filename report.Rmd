@@ -21,9 +21,7 @@ We then created **scatterplots of six variables against recovery time**. It is e
 
 Moreover, the **correlation analysis** conducted on variables including "height," "weight," and "bmi" suggests a strong positive correlation among these attributes, which aligns with our common understanding. However, no significant correlations were observed between these attributes and other variables in the dataset.
 
-::: {style="text-align: center;"}
-<img src="midterm_eda.png" style="height:250%"/>
-:::
+![eda](midterm_eda.png)
 
 # Model Training
 
