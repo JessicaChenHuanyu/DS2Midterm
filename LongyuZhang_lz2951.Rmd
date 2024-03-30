@@ -13,6 +13,8 @@ header-includes:
 library(tidyverse)
 library(ggcorrplot)
 library(pheatmap)
+library(caret)
+library(tidymodels)
 ```
 
 # Import Data
@@ -133,5 +135,75 @@ pheatmap(anova_matrix,
          cluster_rows = FALSE, cluster_cols = FALSE,
          show_rownames = TRUE, show_colnames = TRUE,
          legend = TRUE, display_numbers = TRUE)
+```
+
+# Model training
+
+Split dataset into training and testing data.
+
+```{r}
+set.seed(11)
+data_split <- initial_split(recovery, prop = 0.8)
+
+training_data <- training(data_split)
+testing_data <- testing(data_split)
+```
+
+## Ridge regression
+
+```{r}
+ctrl1 <- trainControl(method = "cv", number = 10)
+
+set.seed(11)
+ridge.fit <- train(recovery_time ~ . ,
+                   data = training_data,
+                   method = "glmnet",
+                   tuneGrid = expand.grid(alpha = 0,
+                                          lambda = exp(seq(6, -6, length = 200))),
+                   trControl = ctrl1)
+
+plot(ridge.fit, xTrans = log)
+
+ridge.fit$bestTune
+
+coef(ridge.fit$finalModel, ridge.fit$bestTune$lambda)
+```
+
+## Lasso
+
+```{r}
+set.seed(11)
+lasso.fit <- train(recovery_time ~ .,
+                   data = training_data,
+                   method = "glmnet",
+                   tuneGrid = expand.grid(alpha = 1, 
+                                          lambda = exp(seq(6, -6, length = 200))),
+                   trControl = ctrl1)
+plot(lasso.fit, xTrans = log)
+
+lasso.fit$bestTune
+
+coef(lasso.fit$finalModel, lasso.fit$bestTune$lambda)
+```
+
+## Elastic net
+
+```{r}
+set.seed(11)
+enet.fit <- train(recovery_time ~ .,
+                  data = training_data,
+                  method = "glmnet",
+                  tuneGrid = expand.grid(alpha = seq(0, 1, length = 21), 
+                                         lambda = exp(seq(2, -8, length = 200))),
+                  trControl = ctrl1)
+enet.fit$bestTune
+
+myCol <- rainbow(25)
+myPar <- list(superpose.symbol = list(col = myCol),
+              superpose.line = list(col = myCol))
+
+plot(enet.fit, par.settings = myPar)
+
+coef(enet.fit$finalModel, enet.fit$bestTune$lambda)
 ```
 
