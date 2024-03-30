@@ -23,6 +23,10 @@ Moreover, the **correlation analysis** conducted on variables including "height,
 
 ![eda](midterm_eda.png)
 
+```{r out.width='60%', fig.align='center'}
+knitr::include_graphics("midterm_eda.png")
+```
+
 # Model Training
 
 ## Lasso
