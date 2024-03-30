@@ -12,6 +12,7 @@ header-includes:
 ```{r}
 library(tidyverse)
 library(ggcorrplot)
+library(pheatmap)
 ```
 
 # Import Data
@@ -40,12 +41,14 @@ skimr::skim(recovery) |>
   select(-numeric.hist)
 ```
 
+## Analysis between numeric predictors
+
 ```{r}
 recovery_numeric = 
   recovery |>
   select(where(is.numeric), -id)
 
-recovery_numeric
+# recovery_numeric
 
 ggcorrplot(cor(recovery_numeric), lab = T)
 
@@ -53,28 +56,60 @@ recovery_numeric_long =
   recovery_numeric |>
   gather(key = "predictor", value = "value", -recovery_time)
 
-recovery_numeric_long
+# recovery_numeric_long
 
 ggplot(recovery_numeric_long, aes(x = value, y = recovery_time)) +
   geom_point(alpha = 0.5) +
   facet_wrap(~predictor, scales = "free")
 ```
 
+## Analysis between factor predictors
+
 ```{r}
 recovery_factor = 
   recovery |>
   select(where(is.factor), recovery_time)
 
-recovery_factor
+# recovery_factor
+
+recovery_factor_nonresp =
+  recovery |>
+  select(where(is.factor))
+
+# recovery_factor_nonresp
+
+chi_sq_matrix = matrix(NA, ncol = ncol(recovery_factor_nonresp), nrow = ncol(recovery_factor_nonresp))
+for (i in 1:(ncol(recovery_factor_nonresp)-1)) {
+  for (j in (i+1):ncol(recovery_factor_nonresp)) {
+    cross_table = table(recovery_factor_nonresp[,i],
+                        recovery_factor_nonresp[,j])
+    chi_sq_matrix[i,j] = chisq.test(cross_table)$p.value
+  }
+}
+
+rownames(chi_sq_matrix) = colnames(recovery_factor_nonresp)
+colnames(chi_sq_matrix) = colnames(recovery_factor_nonresp)
+
+# chi_sq_matrix
+
+chi_sq_matrix = t(chi_sq_matrix)
+
+# chi_sq_matrix
+
+pheatmap(chi_sq_matrix,
+         cluster_rows = FALSE, cluster_cols = FALSE,
+         show_rownames = TRUE, show_colnames = TRUE,
+         legend = TRUE, display_numbers = TRUE)
 
 recovery_factor_long = 
   recovery_factor |>
   gather(key = "predictor", value = "value", -recovery_time)
 
-recovery_factor_long
+# recovery_factor_long
 
 ggplot(recovery_factor_long, aes(x = value, y = recovery_time)) +
   geom_violin() +
   facet_wrap(~predictor, scales = "free")
 ```
 
+## Analysis between
