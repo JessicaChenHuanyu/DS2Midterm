@@ -56,7 +56,7 @@ trellis.par.set(theme1)
 par(mar = c(4, 2, 1, 1), mfrow = c(4, 4))
 x = model.matrix(recovery_time ~ age + bmi + weight + height + ldl + sbp, covid)[,-1]
 y = covid$recovery_time
-caret::featurePlot(x, y, plot = "scatter", labels = c("", "Recovery Time"), type = c("p"), layout = c(3, 2))
+caret::featurePlot(x, y, plot = "scatter", labels = c("", "Recovery Time"), type = c("p"), layout = c(3, 2), main = "Continuous Variables Feature Plots")
 ```
 
 ## Boxplot of Recovery Time by Smoking Status and Gender
@@ -133,11 +133,90 @@ covid |>
   theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
 ```
 
+```{r}
+covid |>
+  mutate(gender = factor(gender, levels = c(0, 1), labels = c("Female", "Male")), 
+         smoking = factor(smoking, levels = c(0, 1, 2), labels = c("Never smoked", "Former smoker", "Current smoker"))) |>
+  ggplot(aes(x = recovery_time, fill = gender)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Recovery Time by Smoking Status and Gender",
+       x = "Recovery Time",
+       y = "Smoking Status",
+       fill = "Gender") +
+  theme_bw() +
+  facet_wrap(~ smoking, ncol = 1) + 
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
+```
+
 ## Correlation Plot
 
 ```{r}
 par(mar = c(1, 1, 1, 1), mfrow=c(1,1))
 corrplot::corrplot(cor(covid |> select(recovery_time, age, bmi, weight, height, ldl, sbp)), type = "upper", order = "AOE", diag = FALSE, title = "Correlation Plot of Variables", cex.main = 1.5, mar = c(0, 0, 1, 0))
+```
+
+## Analysis between predictors
+
+```{r}
+covid_numeric = 
+  covid |>
+  select(where(is.numeric))
+
+ggcorrplot(cor(covid_numeric), lab = T) +
+  ggtitle("Correlation Plot of Continuous Variables") + 
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
+
+covid_factor =
+  covid |>
+  select(where(is.factor), recovery_time)
+
+covid_factor_nonresp =
+  covid |>
+  select(where(is.factor))
+
+chi_sq_matrix = matrix(NA, ncol = ncol(covid_factor_nonresp), nrow = ncol(covid_factor_nonresp))
+for (i in 1:(ncol(covid_factor_nonresp)-1)) {
+  for (j in (i+1):ncol(covid_factor_nonresp)) {
+    cross_table = table(covid_factor_nonresp[,i, drop = TRUE],
+                        covid_factor_nonresp[,j, drop = TRUE])
+    chi_sq_matrix[i,j] = chisq.test(cross_table)$p.value
+  }
+}
+
+rownames(chi_sq_matrix) = colnames(covid_factor_nonresp)
+colnames(chi_sq_matrix) = colnames(covid_factor_nonresp)
+
+chi_sq_matrix = t(chi_sq_matrix)
+
+pheatmap(chi_sq_matrix,
+         cluster_rows = FALSE, cluster_cols = FALSE,
+         show_rownames = TRUE, show_colnames = TRUE,
+         legend = TRUE, display_numbers = TRUE)
+
+covid_factor_long = 
+  covid_factor |>
+  gather(key = "predictor", value = "value", -recovery_time)
+
+ggplot(covid_factor_long, aes(x = value, y = recovery_time)) +
+  geom_violin() +
+  facet_wrap(~predictor, scales = "free")
+
+anova_matrix = matrix(NA, ncol = ncol(covid_numeric), nrow = ncol(covid_numeric))
+for (i in 1:(ncol(covid_numeric))) {
+  for (j in 1:ncol(covid_numeric)) {
+    cross_dat = data.frame(num_1 = covid_numeric[,i, drop = TRUE], 
+                           num_2 = covid_numeric[,j, drop = TRUE])
+    anova_matrix[i,j] = summary(aov(num_1 ~ num_2, data = cross_dat))[[1]]$"Pr(>F)"[[1]]
+  }
+}
+
+rownames(anova_matrix) = colnames(covid_numeric)
+colnames(anova_matrix) = colnames(covid_numeric)
+
+pheatmap(anova_matrix,
+         cluster_rows = FALSE, cluster_cols = FALSE,
+         show_rownames = TRUE, show_colnames = TRUE,
+         legend = TRUE, display_numbers = TRUE)
 ```
 
 ## Lasso
@@ -266,18 +345,29 @@ Model assumptions:\
 
 ```{r}
 set.seed(11)
-pls = plsr(recovery_time ~ ., data = training, scale = TRUE, validation = 'CV')
-summary(pls)
 
-validationplot(pls, val.type = 'MSEP', legendpos = 'topright')
+#pls = plsr(recovery_time ~ ., data = training, scale = TRUE, validation = 'CV')
+#summary(pls)
+#validationplot(pls, val.type = 'MSEP', legendpos = 'topright')
+#cv.mse = RMSEP(pls)
+#ncomp.cv = which.min(cv.mse$val[1,,]) - 1
 
-cv.mse = RMSEP(pls)
+pls.fit <- train(recovery_time ~ ., data = training, 
+                 method = "pls", 
+                 tuneGrid = data.frame(ncomp = 1:15), 
+                 trControl = ctrl, 
+                 preProcess = c("center", "scale"))
 
-# num of components
-ncomp.cv = which.min(cv.mse$val[1,,]) - 1
+ggplot(pls.fit, highlight = TRUE) +
+  theme_bw() +
+  labs(title = "PLS CV Result") +
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
+
+summary(pls.fit)
+pls.fit$bestTune
 
 # test error (RMSE)
-pred.pls = predict(pls, newdata = testing, ncomp = ncomp.cv)
+pred.pls = predict(pls.fit, newdata = testing)
 pls.rmse = sqrt(mean((testing$recovery_time - pred.pls)^2))
 pls.rmse
 ```
@@ -422,6 +512,7 @@ res = resamples(list(lasso = lasso.fit,
                      lasso_1se = lasso.fit.1se, 
                      enet = enet.fit, 
                      enet_1se = enet.fit.1se, 
+                     pls = pls.fit, 
                      mars = mars.fit, 
                      gam = gam.fit, 
                      rf = rf.fit, 
@@ -434,7 +525,7 @@ res = resamples(list(lasso = lasso.fit,
     names_to = c(".value", "metric"),
     names_pattern = "(.*)_(.*)"
   ) |>
-  pivot_longer(c(2:9), names_to = "model", values_to = "result")
+  pivot_longer(c(2:10), names_to = "model", values_to = "result")
 
 plot_rmse = res |>
   filter(metric == "rmse") |>
