@@ -31,7 +31,8 @@ recovery = dat |>
          diabetes = as.factor(diabetes),
          vaccine = as.factor(vaccine),
          severity = as.factor(severity),
-         study = as.factor(study))
+         study = as.factor(study)) |>
+  select(-id)
 
 str(recovery)
 ```
@@ -48,7 +49,7 @@ skimr::skim(recovery) |>
 ```{r}
 recovery_numeric = 
   recovery |>
-  select(where(is.numeric), -id)
+  select(where(is.numeric))
 
 # recovery_numeric
 
@@ -194,7 +195,7 @@ enet.fit <- train(recovery_time ~ .,
                   data = training_data,
                   method = "glmnet",
                   tuneGrid = expand.grid(alpha = seq(0, 1, length = 21), 
-                                         lambda = exp(seq(2, -8, length = 200))),
+                                         lambda = exp(seq(2, -10, length = 200))),
                   trControl = ctrl1)
 enet.fit$bestTune
 
@@ -206,4 +207,6 @@ plot(enet.fit, par.settings = myPar)
 
 coef(enet.fit$finalModel, enet.fit$bestTune$lambda)
 ```
+
+
 
