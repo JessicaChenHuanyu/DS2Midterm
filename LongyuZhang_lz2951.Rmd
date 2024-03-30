@@ -208,5 +208,115 @@ plot(enet.fit, par.settings = myPar)
 coef(enet.fit$finalModel, enet.fit$bestTune$lambda)
 ```
 
+## Ridge regression: one SE rule
 
+```{r}
+ctrl_1se <- trainControl(method = "cv", number = 10, selectionFunction = "oneSE")
+
+set.seed(11)
+ridge.fit_1se <- train(recovery_time ~ . ,
+                       data = training_data,
+                       method = "glmnet",
+                       tuneGrid = expand.grid(alpha = 0,
+                                              lambda = exp(seq(6, -6, length = 200))),
+                       trControl = ctrl_1se)
+
+plot(ridge.fit_1se, xTrans = log)
+
+ridge.fit_1se$bestTune
+
+coef(ridge.fit_1se$finalModel, ridge.fit_1se$bestTune$lambda)
+```
+
+## Lasso: one SE rule
+
+```{r}
+set.seed(11)
+lasso.fit_1se <- train(recovery_time ~ .,
+                       data = training_data,
+                       method = "glmnet",
+                       tuneGrid = expand.grid(alpha = 1,
+                                              lambda = exp(seq(6, -6, length = 200))),
+                       trControl = ctrl_1se)
+plot(lasso.fit_1se, xTrans = log)
+
+lasso.fit_1se$bestTune
+
+coef(lasso.fit_1se$finalModel, lasso.fit_1se$bestTune$lambda)
+```
+
+## Elastic net: one SE rule
+
+```{r}
+set.seed(11)
+enet.fit_1se <- train(recovery_time ~ .,
+                      data = training_data,
+                      method = "glmnet",
+                      tuneGrid = expand.grid(alpha = seq(0, 1, length = 21), 
+                                         lambda = exp(seq(2, -10, length = 200))),
+                      trControl = ctrl_1se)
+enet.fit_1se$bestTune
+
+myCol <- rainbow(25)
+myPar <- list(superpose.symbol = list(col = myCol),
+              superpose.line = list(col = myCol))
+
+plot(enet.fit_1se, par.settings = myPar)
+
+coef(enet.fit_1se$finalModel, enet.fit_1se$bestTune$lambda)
+```
+
+## PLS
+
+```{r}
+# training data
+x <- model.matrix(recovery_time ~ ., training_data)[, -1]
+y <- training_data$recovery_time
+
+# test data
+x2 <- model.matrix(recovery_time ~ .,testing_data)[, -1]
+y2 <- testing_data$recovery_time
+
+set.seed(11)
+house_pls.fit <- train(x, y,
+                 method = "pls",
+                 tuneGrid = data.frame(ncomp = 1:15),
+                 trControl = ctrl1,
+                 preProcess = c("center", "scale"))
+predy2.pls2 <- predict(house_pls.fit, newdata = x2)
+sqrt(mean((y2 - predy2.pls2)^2))
+
+ggplot(house_pls.fit, highlight = TRUE)
+house_pls.fit$finalModel$ncomp
+```
+
+## MARS
+
+```{r}
+mars_grid <- expand.grid(degree = 1:3, 
+                         nprune = 2:15)
+
+set.seed(11)
+mars_fit <- train(x, y,
+                  method = "earth",
+                  tuneGrid = mars_grid,
+                  trControl = ctrl1)
+
+ggplot(mars_fit)
+
+mars_fit$bestTune
+
+coef(mars_fit$finalModel) 
+```
+
+## GAM
+
+```{r}
+set.seed(1)
+gam_fit <- train(x, y,
+                 method = "gam",
+                 trControl = ctrl1)
+
+gam_fit$bestTune
+```
 
