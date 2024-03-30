@@ -2,7 +2,7 @@
 title: "Midterm Project Report"
 author: "Huanyu Chen, Yifei Liu, Longyu Zhang"
 output: pdf_document
-abstract: This study examines the predictive performance of various data science models in estimating recovery time from COVID-19 based on demographic and health-related factors. The techniques used include LASSO regression, Elastic Net, PLS, MARS, GAM, and Random Forest. The results show that MARS has the best predictive performance among all the methods. Our findings underscore the importance of considering both linear and nonlinear relationships in modeling recovery time. Moreover, our findings can have implications for clinical decision-making and resource allocation in COVID-19 management.
+abstract: This study examines the predictive performance of various data science models in estimating recovery time from COVID-19 based on demographic and health-related factors. The techniques used include LASSO regression, Elastic Net, Partial Least Squares (PLS), Multivariate Adaptive Regression Splines (MARS), Generalized Additive Model (GAM), Random Forest, and Random Forest Conditional Inference Tree. The results show that MARS has the best predictive performance among all the methods. Our findings underscore the importance of considering both linear and nonlinear relationships in modeling recovery time. Moreover, our findings can have implications for clinical decision-making and resource allocation in COVID-19 management.
 ---
 
 ```{r message=FALSE, warning = FALSE, echo=FALSE}
@@ -203,9 +203,10 @@ In **model comparison**, we initially assessed the performance of various models
 &+ 8.559 \cdot \text{age} \cdot \text{race2} \cdot h(\text{bmi}-31) \cdot \text{studyB} + 18.363 \cdot \text{severity1} \cdot \text{studyB}
 \end{align*}
 
-where $\hat{Y}$ represents the predicted recovery time.
+where $\hat{Y}$ represents the predicted recovery time (in days).
 
-These coefficients represent the combined effect of race, bmi, height, study, vaccine, age, and severity participation on the predicted recovery time. For example, the coefficient $-514.279$ quantifies how being in race group 2, having a BMI deviation from 31 (as determined by the smoothing function), and participating in study B collectively influence the predicted recovery time. Specifically, for individuals meeting these conditions, there is a decrease of 514.279 days in the predicted recovery time compared to individuals of the reference race group with BMI 31 who did not participate in the study.
+These coefficients represent the combined effect of race, bmi, height, study, vaccine, age, and severity participation on the predicted recovery time. For example, the coefficient $-514.279$ quantifies how being Asian (race group 2), having a BMI deviation from 31 (as determined by the smoothing function), and participating in study B collectively influence the predicted recovery time. Specifically, for individuals meeting these conditions, there is a decrease of 514.279 days in the predicted recovery time compared to White individuals (race group 1) with BMI 31 who participated in the group of study A.
 
 # Conclusion
 
+In conclusion, this study investigated the predictive performance of various models for estimating recovery time from COVID-19 based on demographic and health-related factors. In conclusion, Multivariate Adaptive Regression Splines (MARS) emerged as the optimal choice due to its stable performance and robustness. The coefficients of MARS model shed light on the combined effects of race, BMI, height, study group, vaccine status, age, and severity level on predicted recovery time. Notably, our findings underscore the importance of considering both linear and nonlinear relationships in modeling recovery time, with potential implications for clinical decision-making and resource allocation in managing COVID-19.
