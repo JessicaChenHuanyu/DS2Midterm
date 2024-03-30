@@ -56,7 +56,7 @@ trellis.par.set(theme1)
 par(mar = c(4, 2, 1, 1), mfrow = c(4, 4))
 x = model.matrix(recovery_time ~ age + bmi + weight + height + ldl + sbp, covid)[,-1]
 y = covid$recovery_time
-caret::featurePlot(x, y, plot = "scatter", labels = c("", "Y"), type = c("p"), layout = c(3, 2))
+caret::featurePlot(x, y, plot = "scatter", labels = c("", "Recovery Time"), type = c("p"), layout = c(3, 2))
 ```
 
 ## Boxplot of Recovery Time by Smoking Status and Gender

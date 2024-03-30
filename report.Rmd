@@ -59,7 +59,7 @@ In this dataset, `age`, `height`, `weight`, `bmi`, `SBP`, `LDL`, and `recovery_t
 
 Our analysis reveals a notable trend: across all smoking statuses, females (`gender` = 0) consistently exhibit longer recovery times compared to males. Interestingly, individuals who had never smoked had more outliers on the right side of the boxplot, suggesting a longer recovery time. This counter-intuitive finding suggests that individuals with healthier lifestyles, such as non-smokers, paradoxically require more time to recover from COVID-19.
 
-<div style="text-align: center;"><img src="midterm_intro_3.png" style="width:150%"></div>\
+<div style="text-align: center;"><img src="midterm_eda.png" style="width:150%"></div>\
 
 # Model Training
 
@@ -177,6 +177,8 @@ plot(gam.fit$finalModel)
 ## Random Forest
 
 Model assumptions:\
+(a) Independence among trees: Individual trees are built independently and they do not rely on each other when being created. The independence is crucial for reducing the correlation among trees, thus enhancing the model's ability to generalize.\
+(b) Random Forest assumes that combining the predictions of multiple trees reduces error. This aggregation assumes that errors in individual trees will cancel out when averaged, leading to a more accurate and robust model.\
 
 ```{r echo=FALSE}
 rf.fit = train(xtrain, ytrain, 
