@@ -112,4 +112,26 @@ ggplot(recovery_factor_long, aes(x = value, y = recovery_time)) +
   facet_wrap(~predictor, scales = "free")
 ```
 
-## Analysis between
+## Analysis between numeric and factor predictors
+
+```{r}
+anova_matrix = matrix(NA, ncol = ncol(recovery_factor_nonresp), nrow = ncol(recovery_numeric))
+for (i in 1:(ncol(recovery_numeric))) {
+  for (j in 1:ncol(recovery_factor_nonresp)) {
+    cross_dat = data.frame(num = recovery_numeric[,i], 
+                           fac = recovery_factor_nonresp[,j])
+    anova_matrix[i,j] = summary(aov(num ~ fac, data = cross_dat))[[1]]$"Pr(>F)"[[1]]
+  }
+}
+
+# anova_matrix
+
+rownames(anova_matrix) = colnames(recovery_numeric)
+colnames(anova_matrix) = colnames(recovery_factor_nonresp)
+
+pheatmap(anova_matrix,
+         cluster_rows = FALSE, cluster_cols = FALSE,
+         show_rownames = TRUE, show_colnames = TRUE,
+         legend = TRUE, display_numbers = TRUE)
+```
+
