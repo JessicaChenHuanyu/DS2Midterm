@@ -77,7 +77,7 @@ The **model assumptions** for Lasso includes:
 
 -   Regularization: By penalizing the magnitude of the coefficients (L1 penalty), Lasso encourages smaller absolute values of coefficients, thus reducing model complexity and the risk of overfitting.
 
-The attached graphs display the Root Mean Square Error (RMSE) across different values of the regularization parameter $\lambda$. The second graph adheres to the "1se rule."
+The attached graphs display the Root Mean Square Error (RMSE) across different values of the regularization parameter $\lambda$.
 
 ```{r echo=FALSE, warning = FALSE, message=FALSE}
 set.seed(11)
@@ -107,9 +107,11 @@ plot(lasso.fit.1se, xTrans = log)
 
 ## Elastic Net
 
-Model assumptions:\
-(a) Combined Regularization: Elastic Net uses both L1 and L2 regularization, combining Lasso's variable selection capability with Ridge regression's ability to handle highly correlated predictors.\
-(b) Adjusting Regularization Balance: Elastic Net has two regularization parameters, controlling the overall strength of regularization and the weight balance between L1 and L2 terms. This offers more flexible model tuning capability.\
+The **model assumptions** for Elastic Net includes:
+
+-   Combined Regularization: Elastic Net uses both L1 and L2 regularization, combining Lasso's variable selection capability with Ridge regression's ability to handle highly correlated predictors.
+
+-   Adjusting Regularization Balance: Elastic Net has two regularization parameters, controlling the overall strength of regularization and the weight balance between L1 and L2 terms. This offers more flexible model tuning capability.
 
 ```{r echo=FALSE}
 ctrl = trainControl(method = 'cv', number = 10)
@@ -127,7 +129,6 @@ myPar = list(superpose.symbol = list(col = myCol), superpose.line = list(col = m
 plot(enet.fit, par.settings = myPar, xTrans = log)
 ```
 
-
 ```{r echo=FALSE}
 # applying 1se rule
 enet.fit.1se = train(recovery_time ~ ., data = training, 
@@ -141,9 +142,11 @@ plot(enet.fit.1se, par.settings = myPar, xTrans = log)
 
 ## PLS
 
-Model assumptions:\
-(a) Linear Relationship: PLS assumes a linear relationship between the independent variables and the response variable. It aims to find the multidimensional direction in the X space that explains the maximum multidimensional variance direction in the Y space.\
-(b) PLS assumes that the structure of the relationship between X and Y variables can be captured through a few latent structures. This is fundamental to reducing dimension and extracting the most relevant information from X that predicts Y.\
+The **model assumptions** for PLS includes:
+
+-   Linear Relationship: PLS assumes a linear relationship between the independent variables and the response variable. It aims to find the multidimensional direction in the X space that explains the maximum multidimensional variance direction in the Y space.
+
+-   PLS assumes that the structure of the relationship between X and Y variables can be captured through a few latent structures. This is fundamental to reducing dimension and extracting the most relevant information from X that predicts Y.\
 
 ```{r echo=FALSE}
 pls = plsr(recovery_time ~ ., data = training, scale = TRUE, validation = 'CV')
@@ -152,9 +155,11 @@ validationplot(pls, val.type = 'MSEP', legendpos = 'topright')
 
 ## MARS
 
-Model assumptions:\
-(a) Non-linearity and Interaction: MARS does not assume that relationships between the independent variables and the dependent variable are linear or follow a specific functional form. Instead, it adaptively fits piecewise linear regressions that can model complex non-linear relationships and interactions among variables.\
-(b) Distribution of Errors: MARS does not make specific assumptions about the distribution of error terms.\
+The **model assumptions** for MARS includes:
+
+-   Non-linearity and Interaction: MARS does not assume that relationships between the independent variables and the dependent variable are linear or follow a specific functional form. Instead, it adaptively fits piecewise linear regressions that can model complex non-linear relationships and interactions among variables.
+
+-   Distribution of Errors: MARS does not make specific assumptions about the distribution of error terms.\
 
 ```{r echo=FALSE, message = FALSE, warning = FALSE}
 mars_grid = expand.grid(degree = 1:6, nprune = 2:15)
@@ -171,9 +176,11 @@ ggplot(mars.fit) +
 
 ## GAM
 
-Model assumptions:\
-(a) Additivity: The effect of each predictor on the response is additive. The total effect on the response variable is the sum of the effects of each predictor, modeled by its own smooth function.\
-(b) Smoothness of the Predictor Functions: The relationships between the predictors and the response can be adequately modeled using smooth functions. The degree of smoothness is usually determined by the data and is controlled by smoothing parameters, which can be estimated from the data itself.\
+The **model assumptions** for GAM includes:
+
+-   Additivity: The effect of each predictor on the response is additive. The total effect on the response variable is the sum of the effects of each predictor, modeled by its own smooth function.
+
+-   Smoothness of the Predictor Functions: The relationships between the predictors and the response can be adequately modeled using smooth functions. The degree of smoothness is usually determined by the data and is controlled by smoothing parameters, which can be estimated from the data itself.
 
 ```{r echo=FALSE, message = FALSE, warning = FALSE}
 gam.fit = train(xtrain, ytrain, 
@@ -186,9 +193,11 @@ plot(gam.fit$finalModel)
 
 ## Random Forest
 
-Model assumptions:\
-(a) Independence among trees: Individual trees are built independently and they do not rely on each other when being created. The independence is crucial for reducing the correlation among trees, thus enhancing the model's ability to generalize.\
-(b) Random Forest assumes that combining the predictions of multiple trees reduces error. This aggregation assumes that errors in individual trees will cancel out when averaged, leading to a more accurate and robust model.\
+The **model assumptions** for Random Forest includes:
+
+-   Independence among trees: Individual trees are built independently and they do not rely on each other when being created. The independence is crucial for reducing the correlation among trees, thus enhancing the model's ability to generalize.
+
+-   Random Forest assumes that combining the predictions of multiple trees reduces error. This aggregation assumes that errors in individual trees will cancel out when averaged, leading to a more accurate and robust model.\
 
 ```{r echo=FALSE}
 rf.fit = train(xtrain, ytrain, 
@@ -206,6 +215,7 @@ ggplot(rf.fit, highlight = TRUE) + theme_bw()
 ggplot(ctree.fit, highlight = TRUE) + theme_bw()
 ```
 
+# Result
 
 ## Model Comparation
 
@@ -259,10 +269,6 @@ final_plot = plot_rmse + plot_r_squared + plot_mae +
 
 final_plot
 ```
-
-
-
-# Result
 
 # Conclusion
 
