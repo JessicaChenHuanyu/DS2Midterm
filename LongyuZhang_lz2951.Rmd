@@ -278,16 +278,14 @@ x2 <- model.matrix(recovery_time ~ .,testing_data)[, -1]
 y2 <- testing_data$recovery_time
 
 set.seed(11)
-house_pls.fit <- train(x, y,
+pls.fit <- train(x, y,
                  method = "pls",
                  tuneGrid = data.frame(ncomp = 1:15),
                  trControl = ctrl1,
                  preProcess = c("center", "scale"))
-predy2.pls2 <- predict(house_pls.fit, newdata = x2)
-sqrt(mean((y2 - predy2.pls2)^2))
 
-ggplot(house_pls.fit, highlight = TRUE)
-house_pls.fit$finalModel$ncomp
+ggplot(pls.fit, highlight = TRUE)
+pls.fit$finalModel$ncomp
 ```
 
 ## MARS
@@ -297,26 +295,88 @@ mars_grid <- expand.grid(degree = 1:3,
                          nprune = 2:15)
 
 set.seed(11)
-mars_fit <- train(x, y,
+mars.fit <- train(x, y,
                   method = "earth",
                   tuneGrid = mars_grid,
                   trControl = ctrl1)
 
-ggplot(mars_fit)
+ggplot(mars.fit)
 
-mars_fit$bestTune
+mars.fit$bestTune
 
-coef(mars_fit$finalModel) 
+coef(mars.fit$finalModel) 
 ```
 
 ## GAM
 
 ```{r}
 set.seed(1)
-gam_fit <- train(x, y,
+gam.fit <- train(x, y,
                  method = "gam",
                  trControl = ctrl1)
 
-gam_fit$bestTune
+gam.fit$bestTune
+```
+
+## Comparing different models
+
+```{r}
+set.seed(11)
+
+resamp <- resamples(list(ridge = ridge.fit, enet = enet.fit, lasso = lasso.fit, pls = pls.fit,
+                         ridge_1se = ridge.fit_1se, enet_1se = enet.fit_1se, lasso_1se = lasso.fit_1se,
+                         mars = mars.fit, gam = gam.fit))
+
+summary(resamp)
+
+parallelplot(resamp, metric = "RMSE")
+
+bwplot(resamp, metric = "RMSE")
+```
+
+# Results
+
+```{r}
+pred_ridge = predict(ridge.fit, newdata = testing_data)
+rmse_ridge = sqrt(mean((testing_data$recovery_time - pred_ridge)^2))
+rmse_ridge
+
+pred_lasso = predict(lasso.fit, newdata = testing_data)
+rmse_lasso = sqrt(mean((testing_data$recovery_time - pred_lasso)^2))
+rmse_lasso
+
+pred_enet = predict(enet.fit, newdata = testing_data)
+rmse_enet = sqrt(mean((testing_data$recovery_time - pred_enet)^2))
+rmse_enet
+
+pred_ridge_1se = predict(ridge.fit_1se, newdata = testing_data)
+rmse_ridge_1se = sqrt(mean((testing_data$recovery_time - pred_ridge_1se)^2))
+rmse_ridge_1se
+
+pred_lasso_1se = predict(lasso.fit_1se, newdata = testing_data)
+rmse_lasso_1se = sqrt(mean((testing_data$recovery_time - pred_lasso_1se)^2))
+rmse_lasso_1se
+
+pred_enet_1se = predict(enet.fit_1se, newdata = testing_data)
+rmse_enet_1se = sqrt(mean((testing_data$recovery_time - pred_enet_1se)^2))
+rmse_enet_1se
+
+pred_pls = predict(pls.fit, newdata = x2)
+rmse_pls = sqrt(mean((y2 - pred_pls)^2))
+rmse_pls
+
+pred_mars = predict(mars.fit, new_data = x2)
+rmse_mars = sqrt(mean((y2 - pred_mars)^2))
+rmse_mars
+
+pred_gam = predict(gam.fit, new_data = x2)
+rmse_gam = sqrt(mean((y2 - pred_gam)^2))
+rmse_gam
+
+models = c("ridge_regression", "lasso", "elastic_net", "ridge_regression_1se", "lasso_1se",
+           "elastic_net_1se", "pls", "mars", "gam")
+rmse_on_testing = c(rmse_ridge, rmse_lasso, rmse_enet, rmse_ridge_1se, rmse_lasso_1se, 
+                    rmse_enet_1se, rmse_pls, rmse_mars, rmse_gam)
+knitr::kable(data.frame(models, rmse_on_testing))
 ```
 
