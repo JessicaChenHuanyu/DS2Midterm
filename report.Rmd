@@ -21,8 +21,6 @@ We then created **scatterplots of six variables against recovery time**. It is e
 
 Moreover, the **correlation analysis** conducted on variables including "height," "weight," and "bmi" suggests a strong positive correlation among these attributes, which aligns with our common understanding. However, no significant correlations were observed between these attributes and other variables in the dataset.
 
-![eda](midterm_eda.png)
-
 ```{r out.width='100%', fig.align='center'}
 knitr::include_graphics("midterm_eda.png")
 ```
@@ -39,9 +37,9 @@ The **model assumptions** for Lasso includes:
 
 The attached graphs display the Root Mean Square Error (RMSE) across different values of the regularization parameter $\lambda$.
 
-::: {style="text-align: center;"}
-<img src="lasso_1.png" style="height:250%"/>
-:::
+```{r out.width='100%', fig.align='center'}
+knitr::include_graphics("lasso_1.png")
+```
 
 ## Elastic Net
 
@@ -51,9 +49,9 @@ The **model assumptions** for Elastic Net includes:
 
 -   Adjusting Regularization Balance: Elastic Net has two regularization parameters, controlling the overall strength of regularization and the weight balance between L1 and L2 terms. This offers more flexible model tuning capability.
 
-::: {style="text-align: center;"}
-<img src="elasticnet_1.png" style="width:100%"/>
-:::
+```{r out.width='100%', fig.align='center'}
+knitr::include_graphics("elasticnet_1.png")
+```
 
 ## PLS
 
@@ -63,9 +61,9 @@ The **model assumptions** for PLS includes:
 
 -   PLS assumes that the structure of the relationship between X and Y variables can be captured through a few latent structures. This is fundamental to reducing dimension and extracting the most relevant information from X that predicts Y.\
 
-::: {style="text-align: center;"}
-<img src="pls.png" style="width:100%"/>
-:::
+```{r out.width='100%', fig.align='center'}
+knitr::include_graphics("pls.png")
+```
 
 ## MARS
 
@@ -75,9 +73,9 @@ The **model assumptions** for MARS includes:
 
 -   Distribution of Errors: MARS does not make specific assumptions about the distribution of error terms.\
 
-::: {style="text-align: center;"}
-<img src="MARS.png" style="width:150%"/>
-:::
+```{r out.width='100%', fig.align='center'}
+knitr::include_graphics("MARS.png")
+```
 
 ## GAM
 
@@ -87,9 +85,9 @@ The **model assumptions** for GAM includes:
 
 -   Smoothness of the Predictor Functions: The relationships between the predictors and the response can be adequately modeled using smooth functions. The degree of smoothness is usually determined by the data and is controlled by smoothing parameters, which can be estimated from the data itself.
 
-::: {style="text-align: center;"}
-<img src="GAM.png" style="width:150%"/>
-:::
+```{r out.width='100%', fig.align='center'}
+knitr::include_graphics("GAM.png")
+```
 
 ## Random Forest
 
@@ -99,13 +97,13 @@ The **model assumptions** for Random Forest includes:
 
 -   Random Forest assumes that combining the predictions of multiple trees reduces error. This aggregation assumes that errors in individual trees will cancel out when averaged, leading to a more accurate and robust model.\
 
-::: {style="text-align: center;"}
-<img src="rf_1.png" style="height:250%"/>
-:::
+```{r out.width='100%', fig.align='center'}
+knitr::include_graphics("rf_1.png")
+```
 
-::: {style="text-align: center;"}
-<img src="rf_3.png" style="width:150%"/>
-:::
+```{r out.width='100%', fig.align='center'}
+knitr::include_graphics("rf_3.png")
+```
 
 # Result
 
@@ -113,9 +111,9 @@ The **model assumptions** for Random Forest includes:
 
 In **model comparison**, we initially assessed the performance of various models. Among these, the Generalized Additive Model (GAM), Multivariate Adaptive Regression Splines (MARS), Random Forest (rf), and Random Forest Conditional Inference Tree (rf_ctree) demonstrated promising performances. In the following step, we evaluated RMSE and MAE metrics, where MARS and RF exhibited similar performance and emerged as the top two models. However, due to the excessively wide range observed in RF's results, indicating potential instability, we opted for MARS as the final model for its stability and robustness.
 
-::: {style="text-align: center;"}
-<img src="finalresult.png" style="width:150%"/>
-:::
+```{r out.width='100%', fig.align='center'}
+knitr::include_graphics("finalresult.png")
+```
 
 ## MARS Model and Intrepertation
 
