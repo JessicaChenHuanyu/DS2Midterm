@@ -1,7 +1,9 @@
 ---
 title: "Midterm Project Report"
 author: "Huanyu Chen, Yifei Liu, Longyu Zhang"
-output: pdf_document
+output: 
+  pdf_document:
+    number_sections: true
 abstract: This study examines the predictive performance of various data science models in estimating recovery time from COVID-19 based on demographic and health-related factors. The techniques used include LASSO regression, Elastic Net, Partial Least Squares (PLS), Multivariate Adaptive Regression Splines (MARS), Generalized Additive Model (GAM), Random Forest, and Random Forest Conditional Inference Tree. The results show that MARS has the best predictive performance among all the methods. Our findings underscore the importance of considering both linear and nonlinear relationships in modeling recovery time. Moreover, our findings can have implications for clinical decision-making and resource allocation in COVID-19 management.
 ---
 
@@ -20,7 +22,7 @@ We then created **scatterplots of six variables against recovery time**. It is e
 Moreover, the **correlation analysis** conducted on variables including "height," "weight," and "bmi" suggests a strong positive correlation among these attributes, which aligns with our common understanding. However, no significant correlations were observed between these attributes and other variables in the dataset.
 
 ::: {style="text-align: center;"}
-<img src="midterm_eda.png" style="width:150%"/>
+<img src="midterm_eda.png" style="height:250%"/>
 :::
 
 # Model Training
@@ -36,7 +38,7 @@ The **model assumptions** for Lasso includes:
 The attached graphs display the Root Mean Square Error (RMSE) across different values of the regularization parameter $\lambda$.
 
 ::: {style="text-align: center;"}
-<img src="lasso_1.png" style="width:150%"/>
+<img src="lasso_1.png" style="height:250%"/>
 :::
 
 ## Elastic Net
@@ -48,7 +50,7 @@ The **model assumptions** for Elastic Net includes:
 -   Adjusting Regularization Balance: Elastic Net has two regularization parameters, controlling the overall strength of regularization and the weight balance between L1 and L2 terms. This offers more flexible model tuning capability.
 
 ::: {style="text-align: center;"}
-<img src="elasticnet_1.png" style="width:150%"/>
+<img src="elasticnet_1.png" style="width:100%"/>
 :::
 
 ## PLS
@@ -60,7 +62,7 @@ The **model assumptions** for PLS includes:
 -   PLS assumes that the structure of the relationship between X and Y variables can be captured through a few latent structures. This is fundamental to reducing dimension and extracting the most relevant information from X that predicts Y.\
 
 ::: {style="text-align: center;"}
-<img src="pls.png" style="width:150%"/>
+<img src="pls.png" style="width:100%"/>
 :::
 
 ## MARS
@@ -96,7 +98,7 @@ The **model assumptions** for Random Forest includes:
 -   Random Forest assumes that combining the predictions of multiple trees reduces error. This aggregation assumes that errors in individual trees will cancel out when averaged, leading to a more accurate and robust model.\
 
 ::: {style="text-align: center;"}
-<img src="rf_1.png" style="width:150%"/>
+<img src="rf_1.png" style="height:250%"/>
 :::
 
 ::: {style="text-align: center;"}
