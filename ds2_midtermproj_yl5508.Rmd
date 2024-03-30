@@ -155,10 +155,10 @@ ctrl_1se = trainControl(method = 'cv', number = 10, selectionFunction =  'oneSE'
 lasso.fit = train(recovery_time ~ ., data = training, 
              method = 'glmnet', 
              tuneGrid = expand.grid(alpha = 1, 
-                                    lambda = exp(seq(-5, -2, length = 100))), 
+                                    lambda = exp(seq(-4, -2, length = 100))), 
              trControl = ctrl)
 
-plot(lasso.fit, xTrans = log)
+plot(lasso.fit, xTrans = log, main = "Lasso CV Result")
 
 # selected lambda
 lasso.fit$bestTune$lambda
@@ -180,10 +180,10 @@ rmse.lasso
 lasso.fit.1se = train(recovery_time ~ ., data = training, 
              method = 'glmnet', 
              tuneGrid = expand.grid(alpha = 1, 
-                                    lambda = exp(seq(-5, -2, length = 100))), 
+                                    lambda = exp(seq(-4, -2, length = 100))), 
              trControl = ctrl_1se)
 
-plot(lasso.fit.1se, xTrans = log)
+plot(lasso.fit.1se, xTrans = log, main = "Lasso_1se CV Result")
 
 # selected alpha and lambda
 lasso.fit.1se$bestTune$lambda
@@ -214,13 +214,13 @@ ctrl_1se = trainControl(method = 'cv', number = 10, selectionFunction =  'oneSE'
 enet.fit = train(recovery_time ~ ., data = training, 
              method = 'glmnet', 
              tuneGrid = expand.grid(alpha = seq(0, 1, length = 21), 
-                                    lambda = exp(seq(-8, 0, length = 100))), 
+                                    lambda = exp(seq(-6, 1, length = 100))), 
              trControl = ctrl)
 
 myCol = rainbow(25)
 myPar = list(superpose.symbol = list(col = myCol), superpose.line = list(col = myCol))
 
-plot(enet.fit, par.settings = myPar, xTrans = log)
+plot(enet.fit, par.settings = myPar, xTrans = log, main = "Elastic Net CV Result")
 
 # selected alpha and lambda
 enet.fit$bestTune
@@ -244,10 +244,10 @@ set.seed(11)
 enet.fit.1se = train(recovery_time ~ ., data = training, 
              method = 'glmnet', 
              tuneGrid = expand.grid(alpha = seq(0, 1, length = 21), 
-                                    lambda = exp(seq(-8, 0, length = 100))), 
+                                    lambda = exp(seq(-6, 1, length = 100))), 
              trControl = ctrl_1se)
 
-plot(enet.fit.1se, par.settings = myPar, xTrans = log)
+plot(enet.fit.1se, par.settings = myPar, xTrans = log, main = "Elastic Net_1se CV Result")
 
 # selected alpha and lambda
 enet.fit.1se$bestTune
@@ -299,7 +299,9 @@ mars.fit = train(xtrain, ytrain,
                  trControl = ctrl)
 
 ggplot(mars.fit) +
-  theme_bw()
+  theme_bw() +
+  labs(title = "MARS CV Result") +
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
 
 # fit of the model
 mars.fit$bestTune
@@ -335,8 +337,10 @@ gam.fit = train(xtrain, ytrain,
 gam.fit$finalModel
 
 # plot (gam.fit)
-par(mar = c(4, 2, 1, 1), mfrow = c(2, 3))
+par(oma = c(0, 0, 3, 0))
+par(mar = c(4, 4, 1, 1), mfrow = c(2, 3))
 plot(gam.fit$finalModel)
+mtext("GAM Result", side = 3, line = 0.5, outer = TRUE, cex = 1.2)
 
 # test error (rmse)
 gam.test = predict(gam.fit, x = xtest)
@@ -387,8 +391,16 @@ ctree.fit = train(recovery_time ~ ., training,
                   trControl = ctrl)
 
 # plot
-ggplot(rf.fit, highlight = TRUE) + theme_bw()
-ggplot(ctree.fit, highlight = TRUE) + theme_bw()
+ggplot(rf.fit, highlight = TRUE) + 
+  theme_bw() +
+  labs(title = "Random Forest (rf.fit) CV Result") +
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
+
+ggplot(ctree.fit, highlight = TRUE) + 
+  theme_bw() +
+  labs(title = "Random Forest (ctree.fit) CV Result") +
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
+
 plot(ctree.fit$finalModel)
 
 # test error (rmse)
