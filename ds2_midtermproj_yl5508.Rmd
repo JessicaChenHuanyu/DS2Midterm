@@ -465,67 +465,76 @@ final_plot
 ```{r}
 # testing data
 pred.lasso = predict(lasso.fit, newdata = testing)
-rmse.lasso = sqrt(mean((testing$recovery_time - pred.lasso)^2))
-r2.lasso = cor(testing$recovery_time, pred.lasso)^2
-mae.lasso = mean(abs(testing$recovery_time - pred.lasso))
+perf.lasso = postResample(pred = pred.lasso, obs = testing$recovery_time)
+#rmse.lasso = sqrt(mean((testing$recovery_time - pred.lasso)^2))
+#r2.lasso = cor(testing$recovery_time, pred.lasso)^2
+#mae.lasso = mean(abs(testing$recovery_time - pred.lasso))
 
 pred.lasso.1se = predict(lasso.fit.1se, newdata = testing)
-rmse.lasso_1se = sqrt(mean((testing$recovery_time - pred.lasso.1se)^2))
-r2.lasso_1se = cor(testing$recovery_time, pred.lasso.1se)^2
-mae.lasso_1se = mean(abs(testing$recovery_time - pred.lasso.1se))
+perf.lasso_1se = postResample(pred = pred.lasso.1se, obs = testing$recovery_time)
+#rmse.lasso_1se = sqrt(mean((testing$recovery_time - pred.lasso.1se)^2))
+#r2.lasso_1se = cor(testing$recovery_time, pred.lasso.1se)^2
+#mae.lasso_1se = mean(abs(testing$recovery_time - pred.lasso.1se))
 
 pred.enet = predict(enet.fit, newdata = testing)
-rmse.enet = sqrt(mean((testing$recovery_time - pred.enet)^2))
-r2.enet = cor(testing$recovery_time, pred.enet)^2
-mae.enet = mean(abs(testing$recovery_time - pred.enet))
+perf.enet = postResample(pred = pred.enet, obs = testing$recovery_time)
+#rmse.enet = sqrt(mean((testing$recovery_time - pred.enet)^2))
+#r2.enet = cor(testing$recovery_time, pred.enet)^2
+#mae.enet = mean(abs(testing$recovery_time - pred.enet))
 
 pred.enet.1se = predict(enet.fit.1se, newdata = testing)
-rmse.enet_1se = sqrt(mean((testing$recovery_time - pred.enet.1se)^2))
-r2.enet_1se = cor(testing$recovery_time, pred.enet.1se)^2
-mae.enet_1se = mean(abs(testing$recovery_time - pred.enet.1se))
+perf.enet_1se = postResample(pred = pred.enet.1se, obs = testing$recovery_time)
+#rmse.enet_1se = sqrt(mean((testing$recovery_time - pred.enet.1se)^2))
+#r2.enet_1se = cor(testing$recovery_time, pred.enet.1se)^2
+#mae.enet_1se = mean(abs(testing$recovery_time - pred.enet.1se))
 
 pred.pls = predict(pls.fit, newdata = testing)
-rmse.pls = sqrt(mean((testing$recovery_time - pred.pls)^2))
-r2.pls = cor(testing$recovery_time, pred.pls)^2
-mae.pls = mean(abs(testing$recovery_time - pred.pls))
+perf.pls = postResample(pred = pred.pls, obs = testing$recovery_time)
+#rmse.pls = sqrt(mean((testing$recovery_time - pred.pls)^2))
+#r2.pls = cor(testing$recovery_time, pred.pls)^2
+#mae.pls = mean(abs(testing$recovery_time - pred.pls))
 
 pred.mars = predict(mars.fit, newdata = xtest)
-rmse.mars = sqrt(mean((testing$recovery_time - pred.mars)^2))
-r2.mars = cor(testing$recovery_time, pred.mars)^2 |> as.numeric()
-mae.mars = mean(abs(testing$recovery_time - pred.mars))
+perf.mars = postResample(pred = pred.mars, obs = testing$recovery_time)
+#rmse.mars = sqrt(mean((testing$recovery_time - pred.mars)^2))
+#r2.mars = cor(testing$recovery_time, pred.mars)^2 |> as.numeric()
+#mae.mars = mean(abs(testing$recovery_time - pred.mars))
 
 pred.gam = predict(gam.fit, newdata = xtest)
-rmse.gam = sqrt(mean((testing$recovery_time - pred.gam)^2))
-r2.gam = cor(testing$recovery_time, pred.gam)^2
-mae.gam = mean(abs(testing$recovery_time - pred.gam))
+perf.gam = postResample(pred = pred.gam, obs = testing$recovery_time)
+#rmse.gam = sqrt(mean((testing$recovery_time - pred.gam)^2))
+#r2.gam = cor(testing$recovery_time, pred.gam)^2
+#mae.gam = mean(abs(testing$recovery_time - pred.gam))
 
 pred.rf = predict(rf.fit, newdata = xtest)
-rmse.rf = sqrt(mean((testing$recovery_time - pred.rf)^2))
-r2.rf = cor(testing$recovery_time, pred.rf)^2
-mae.rf = mean(abs(testing$recovery_time - pred.rf))
+perf.rf = postResample(pred = pred.rf, obs = testing$recovery_time)
+#rmse.rf = sqrt(mean((testing$recovery_time - pred.rf)^2))
+#r2.rf = cor(testing$recovery_time, pred.rf)^2
+#mae.rf = mean(abs(testing$recovery_time - pred.rf))
 
 pred.ctree = predict(ctree.fit, newdata = testing)
-rmse.rf_ctree = sqrt(mean((testing$recovery_time - pred.ctree)^2))
-r2.rf_ctree = cor(testing$recovery_time, pred.ctree)^2
-mae.rf_ctree = mean(abs(testing$recovery_time - pred.ctree))
+perf.rf.ctree = postResample(pred = pred.ctree, obs = testing$recovery_time)
+#rmse.rf_ctree = sqrt(mean((testing$recovery_time - pred.ctree)^2))
+#r2.rf_ctree = cor(testing$recovery_time, pred.ctree)^2
+#mae.rf_ctree = mean(abs(testing$recovery_time - pred.ctree))
 
-res_test = tibble(
-  rmse.lasso, r2.lasso, mae.lasso, 
-  rmse.lasso_1se, r2.lasso_1se, mae.lasso_1se, 
-  rmse.enet, r2.enet, mae.enet, 
-  rmse.enet_1se, r2.enet_1se, mae.enet_1se, 
-  rmse.pls, r2.pls, mae.pls, 
-  rmse.mars, r2.mars, mae.mars, 
-  rmse.gam, r2.gam, mae.gam, 
-  rmse.rf, r2.rf, mae.rf, 
-  rmse.rf_ctree, r2.rf_ctree, mae.rf_ctree
-) |>
-  pivot_longer(
-    everything(),
-    names_to = c("metric", "model"),
-    names_sep = "\\.",
-    values_to = "result"
-  )
+#res_test = tibble(
+#  rmse.lasso, r2.lasso, mae.lasso, 
+#  rmse.lasso_1se, r2.lasso_1se, mae.lasso_1se, 
+#  rmse.enet, r2.enet, mae.enet, 
+#  rmse.enet_1se, r2.enet_1se, mae.enet_1se, 
+#  rmse.pls, r2.pls, mae.pls, 
+#  rmse.mars, r2.mars, mae.mars, 
+#  rmse.gam, r2.gam, mae.gam, 
+#  rmse.rf, r2.rf, mae.rf, 
+#  rmse.rf_ctree, r2.rf_ctree, mae.rf_ctree
+#) |>
+#  pivot_longer(
+#    everything(),
+#    names_to = c("metric", "model"),
+#    names_sep = "\\.",
+#    values_to = "result"
+#  )
 ```
 
 ```{r fig.width=8, fig.height=12}
