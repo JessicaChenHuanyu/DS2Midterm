@@ -64,7 +64,7 @@ We then created **scatterplots of six variables against recovery time**. It is e
 Moreover, the **correlation analysis** conducted on variables including "height," "weight," and "bmi" suggests a strong positive correlation among these attributes, which aligns with our common understanding. However, no significant correlations were observed between these attributes and other variables in the dataset.
 
 ::: {style="text-align: center;"}
-<img src="midterm_intro_3.png" style="width:150%"/>
+<img src="midterm_eda.png" style="width:150%"/>
 :::
 
 # Model Training
@@ -161,18 +161,6 @@ The **model assumptions** for MARS includes:
 
 -   Distribution of Errors: MARS does not make specific assumptions about the distribution of error terms.\
 
-```{r echo=FALSE, message = FALSE, warning = FALSE}
-mars_grid = expand.grid(degree = 1:6, nprune = 2:15)
-ctrl = trainControl(method = 'cv', number = 10)
-
-mars.fit = train(xtrain, ytrain, 
-                 method = "earth", 
-                 tuneGrid = mars_grid, 
-                 trControl = ctrl)
-
-ggplot(mars.fit) +
-  theme_bw()
-```
 
 ## GAM
 
@@ -199,77 +187,25 @@ The **model assumptions** for Random Forest includes:
 
 -   Random Forest assumes that combining the predictions of multiple trees reduces error. This aggregation assumes that errors in individual trees will cancel out when averaged, leading to a more accurate and robust model.\
 
-```{r echo=FALSE}
-rf.fit = train(xtrain, ytrain, 
-               method = "rf", 
-               trControl = ctrl, 
-               tuneGrid = expand.grid(mtry = 1:10))
-
-ctree.fit = train(recovery_time ~ ., training, 
-                  method = "ctree", 
-                  tuneGrid = data.frame(mincriterion = 1-exp(seq(-6, -2, length = 100))), 
-                  trControl = ctrl)
-
-# plot
-ggplot(rf.fit, highlight = TRUE) + theme_bw()
-ggplot(ctree.fit, highlight = TRUE) + theme_bw()
-```
 
 # Result
 
 ## Model Comparation
 
-```{r echo=FALSE, fig.width=15, fig.height=8}
-res = resamples(list(lasso = lasso.fit, 
-                     lasso_1se = lasso.fit.1se, 
-                     enet = enet.fit, 
-                     enet_1se = enet.fit.1se, 
-                     mars = mars.fit, 
-                     gam = gam.fit, 
-                     rf = rf.fit, 
-                     rf_ctree = ctree.fit))$value |>
-  tibble() |>
-  janitor::clean_names() |>
-  select(- resample) |>
-  pivot_longer(
-    everything(),
-    names_to = c(".value", "metric"),
-    names_pattern = "(.*)_(.*)"
-  ) |>
-  pivot_longer(c(2:9), names_to = "model", values_to = "result")
+In **model comparison**, we initially assessed the performance of various models. Among these, the Generalized Additive Model (GAM), Multivariate Adaptive Regression Splines (MARS), Random Forest (rf), and Random Forest Conditional Inference Tree (rf_ctree) demonstrated promising performances. In the following step, we evaluated RMSE and MAE metrics, where MARS and RF exhibited similar performance and emerged as the top two models. However, due to the excessively wide range observed in RF's results, indicating potential instability, we opted for MARS as the final model for its stability and robustness.
 
-plot_rmse = res |>
-  filter(metric == "rmse") |>
-  ggplot(aes(x = model, y = result, fill = model)) +
-  geom_boxplot(alpha = 0.5) +
-  labs(y = "RMSE") +
-  theme_minimal() +
-  guides(fill = guide_legend("Model"))
 
-plot_r_squared = res |>
-  filter(metric == "rsquared") |>
-  ggplot(aes(x = model, y = result, fill = model)) +
-  geom_boxplot(alpha = 0.5) +
-  labs(y = "R squared") +
-  theme_minimal() +
-  guides(fill = guide_legend("Model"))
+## MARS Model and Intrepertation
 
-plot_mae = res |>
-  filter(metric == "mae") |>
-  ggplot(aes(x = model, y = result, fill = model)) +
-  geom_boxplot(alpha = 0.5) +
-  labs(y = "MAE") +
-  theme_minimal() +
-  guides(fill = guide_legend("Model"))
+\begin{align*}
+\hat{Y} &= 3.372 + 5.900 \cdot h(31-\text{bmi}) + 3.651 \cdot h(161.6-\text{height}) \cdot h(\text{bmi}-31) \cdot \text{studyB} \\
+&+ 7.639 \cdot h(\text{bmi}-25.3) + (-5.825) \cdot \text{vaccine1} - 514.279 \cdot \text{race2} \cdot h(\text{bmi}-31) \cdot \text{studyB} \\
+&+ 8.559 \cdot \text{age} \cdot \text{race2} \cdot h(\text{bmi}-31) \cdot \text{studyB} + 18.363 \cdot \text{severity1} \cdot \text{studyB}
+\end{align*}
 
-final_plot = plot_rmse + plot_r_squared + plot_mae +
-  plot_layout(ncol = 3) + 
-  plot_annotation(title = "Results by Models and Metrics",
-                  theme = theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5)))
+where $\hat{Y}$ represents the predicted recovery time.
 
-final_plot
-```
+These coefficients represent the combined effect of race, bmi, height, study, vaccine, age, and severity participation on the predicted recovery time. For example, the coefficient $-514.279$ quantifies how being in race group 2, having a BMI deviation from 31 (as determined by the smoothing function), and participating in study B collectively influence the predicted recovery time. Specifically, for individuals meeting these conditions, there is a decrease of 514.279 days in the predicted recovery time compared to individuals of the reference race group with BMI 31 who did not participate in the study.
 
 # Conclusion
 
-# Appendix
