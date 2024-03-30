@@ -4,6 +4,11 @@ author: "Huanyu Chen, Yifei Liu, Longyu Zhang"
 output: 
   pdf_document:
     number_sections: true
+header-includes:
+  - \usepackage{titlesec}
+  - \titlespacing*{\section}{0pt}{*0.5}{*0.5}
+  - \titlespacing*{\subsection}{0pt}{*0.5}{*0.5}
+  - \titlespacing*{\subsubsection}{0pt}{*0.5}{*0.5}
 abstract: This study examines the predictive performance of various data science models in estimating recovery time from COVID-19 based on demographic and health-related factors. The techniques used include LASSO regression, Elastic Net, Partial Least Squares (PLS), Multivariate Adaptive Regression Splines (MARS), Generalized Additive Model (GAM), Random Forest, and Random Forest Conditional Inference Tree. The results show that MARS has the best predictive performance among all the methods. Our findings underscore the importance of considering both linear and nonlinear relationships in modeling recovery time. Moreover, our findings can have implications for clinical decision-making and resource allocation in COVID-19 management.
 ---
 
