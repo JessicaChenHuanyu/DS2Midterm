@@ -11,6 +11,7 @@ header-includes:
 
 ```{r}
 library(tidyverse)
+library(ggcorrplot)
 ```
 
 # Import Data
@@ -39,4 +40,41 @@ skimr::skim(recovery) |>
   select(-numeric.hist)
 ```
 
+```{r}
+recovery_numeric = 
+  recovery |>
+  select(where(is.numeric), -id)
+
+recovery_numeric
+
+ggcorrplot(cor(recovery_numeric), lab = T)
+
+recovery_numeric_long = 
+  recovery_numeric |>
+  gather(key = "predictor", value = "value", -recovery_time)
+
+recovery_numeric_long
+
+ggplot(recovery_numeric_long, aes(x = value, y = recovery_time)) +
+  geom_point(alpha = 0.5) +
+  facet_wrap(~predictor, scales = "free")
+```
+
+```{r}
+recovery_factor = 
+  recovery |>
+  select(where(is.factor), recovery_time)
+
+recovery_factor
+
+recovery_factor_long = 
+  recovery_factor |>
+  gather(key = "predictor", value = "value", -recovery_time)
+
+recovery_factor_long
+
+ggplot(recovery_factor_long, aes(x = value, y = recovery_time)) +
+  geom_violin() +
+  facet_wrap(~predictor, scales = "free")
+```
 
