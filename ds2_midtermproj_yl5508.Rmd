@@ -9,6 +9,8 @@ output: html_document
 library(tidyverse)
 library(ggridges)
 library(corrplot)
+library(ggcorrplot)
+library(pheatmap)
 library(rsample)
 library(lattice)
 library(caret)
@@ -247,11 +249,6 @@ coef(lasso.fit$finalModel, s = lasso.fit$bestTune$lambda)
 
 # num of predictors
 sum(lasso.fit$coefname != 0)
-
-# test error (RMSE)
-pred.lasso = predict(lasso.fit, newdata = testing)
-rmse.lasso = sqrt(mean((testing$recovery_time - pred.lasso)^2))
-rmse.lasso
 ```
 
 ```{r warning = FALSE, message=FALSE}
@@ -272,11 +269,6 @@ coef(lasso.fit.1se$finalModel, s = lasso.fit.1se$bestTune$lambda)
 
 # num of predictors
 sum(lasso.fit.1se$coefname != 0)
-
-# test error (RMSE)
-pred.lasso.1se = predict(lasso.fit.1se, newdata = testing)
-rmse.lasso.1se = sqrt(mean((testing$recovery_time - pred.lasso.1se)^2))
-rmse.lasso.1se
 ```
 
 ## Elastic Net
@@ -309,11 +301,6 @@ coef(enet.fit$finalModel, s = enet.fit$bestTune$lambda)
 
 # num of predictors
 sum(enet.fit$coefname != 0)
-
-# test error (RMSE)
-pred.enet = predict(enet.fit, newdata = testing)
-rmse.enet = sqrt(mean((testing$recovery_time - pred.enet)^2))
-rmse.enet
 ```
 
 
@@ -330,11 +317,6 @@ plot(enet.fit.1se, par.settings = myPar, xTrans = log, main = "Elastic Net_1se C
 
 # selected alpha and lambda
 enet.fit.1se$bestTune
-
-# test error (RMSE)
-pred.enet.1se = predict(enet.fit.1se, newdata = testing)
-rmse.enet.1se = sqrt(mean((testing$recovery_time - pred.enet.1se)^2))
-rmse.enet.1se
 ```
 
 ## PLS
@@ -365,11 +347,6 @@ ggplot(pls.fit, highlight = TRUE) +
 
 summary(pls.fit)
 pls.fit$bestTune
-
-# test error (RMSE)
-pred.pls = predict(pls.fit, newdata = testing)
-pls.rmse = sqrt(mean((testing$recovery_time - pred.pls)^2))
-pls.rmse
 ```
 
 ## MARS
@@ -406,11 +383,6 @@ pdp::plotPartial(levelplot = FALSE, zlab = "yhat", drape = TRUE,
 screen = list(z = 20, x = -60))
 
 gridExtra::grid.arrange(p1, p2, ncol = 2)
-
-# test error (rmse)
-mars.test = predict(mars.fit, x = xtest)
-mars.rmse = sqrt(mean((mars.test - ytest)^2))
-mars.rmse
 ```
 
 ## GAM
@@ -431,11 +403,6 @@ par(oma = c(0, 0, 3, 0))
 par(mar = c(4, 4, 1, 1), mfrow = c(2, 3))
 plot(gam.fit$finalModel)
 mtext("GAM Result", side = 3, line = 0.5, outer = TRUE, cex = 1.2)
-
-# test error (rmse)
-gam.test = predict(gam.fit, x = xtest)
-gam.rmse = sqrt(mean((gam.test - ytest)^2))
-gam.rmse
 ```
 
 ## Random Forest
@@ -492,17 +459,7 @@ ggplot(ctree.fit, highlight = TRUE) +
   theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
 
 plot(ctree.fit$finalModel)
-
-# test error (rmse)
-rf.test = predict(rf.fit, x = xtest)
-rf.rmse = sqrt(mean((rf.test - ytest)^2))
-rf.rmse
-
-ctree.test = predict(ctree.fit, x = xtest)
-ctree.rmse = sqrt(mean((ctree.test - ytest)^2))
-ctree.rmse
 ```
-
 
 ## Model Comparation
 
@@ -553,7 +510,7 @@ plot_mae = res |>
 
 final_plot = plot_rmse + plot_r_squared + plot_mae +
   plot_layout(ncol = 3) + 
-  plot_annotation(title = "Results by Models and Metrics",
+  plot_annotation(title = "Performance by Models and Metrics",
                   theme = theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5)))
 ```
 
@@ -561,4 +518,84 @@ final_plot = plot_rmse + plot_r_squared + plot_mae +
 final_plot
 ```
 
+```{r}
+# testing data
+pred.lasso = predict(lasso.fit, newdata = testing)
+rmse.lasso = sqrt(mean((testing$recovery_time - pred.lasso)^2))
+r2.lasso = cor(testing$recovery_time, pred.lasso)^2
+mae.lasso = mean(abs(testing$recovery_time - pred.lasso))
+
+pred.lasso.1se = predict(lasso.fit.1se, newdata = testing)
+rmse.lasso_1se = sqrt(mean((testing$recovery_time - pred.lasso.1se)^2))
+r2.lasso_1se = cor(testing$recovery_time, pred.lasso.1se)^2
+mae.lasso_1se = mean(abs(testing$recovery_time - pred.lasso.1se))
+
+pred.enet = predict(enet.fit, newdata = testing)
+rmse.enet = sqrt(mean((testing$recovery_time - pred.enet)^2))
+r2.enet = cor(testing$recovery_time, pred.enet)^2
+mae.enet = mean(abs(testing$recovery_time - pred.enet))
+
+pred.enet.1se = predict(enet.fit.1se, newdata = testing)
+rmse.enet_1se = sqrt(mean((testing$recovery_time - pred.enet.1se)^2))
+r2.enet_1se = cor(testing$recovery_time, pred.enet.1se)^2
+mae.enet_1se = mean(abs(testing$recovery_time - pred.enet.1se))
+
+pred.pls = predict(pls.fit, newdata = testing)
+rmse.pls = sqrt(mean((testing$recovery_time - pred.pls)^2))
+r2.pls = cor(testing$recovery_time, pred.pls)^2
+mae.pls = mean(abs(testing$recovery_time - pred.pls))
+
+pred.mars = predict(mars.fit, newdata = xtest)
+rmse.mars = sqrt(mean((testing$recovery_time - pred.mars)^2))
+r2.mars = cor(testing$recovery_time, pred.mars)^2 |> as.numeric()
+mae.mars = mean(abs(testing$recovery_time - pred.mars))
+
+pred.gam = predict(gam.fit, newdata = xtest)
+rmse.gam = sqrt(mean((testing$recovery_time - pred.gam)^2))
+r2.gam = cor(testing$recovery_time, pred.gam)^2
+mae.gam = mean(abs(testing$recovery_time - pred.gam))
+
+pred.rf = predict(rf.fit, newdata = xtest)
+rmse.rf = sqrt(mean((testing$recovery_time - pred.rf)^2))
+r2.rf = cor(testing$recovery_time, pred.rf)^2
+mae.rf = mean(abs(testing$recovery_time - pred.rf))
+
+pred.ctree = predict(ctree.fit, newdata = testing)
+rmse.rf_ctree = sqrt(mean((testing$recovery_time - pred.ctree)^2))
+r2.rf_ctree = cor(testing$recovery_time, pred.ctree)^2
+mae.rf_ctree = mean(abs(testing$recovery_time - pred.ctree))
+
+res_test = tibble(
+  rmse.lasso, r2.lasso, mae.lasso, 
+  rmse.lasso_1se, r2.lasso_1se, mae.lasso_1se, 
+  rmse.enet, r2.enet, mae.enet, 
+  rmse.enet_1se, r2.enet_1se, mae.enet_1se, 
+  rmse.pls, r2.pls, mae.pls, 
+  rmse.mars, r2.mars, mae.mars, 
+  rmse.gam, r2.gam, mae.gam, 
+  rmse.rf, r2.rf, mae.rf, 
+  rmse.rf_ctree, r2.rf_ctree, mae.rf_ctree
+) |>
+  pivot_longer(
+    everything(),
+    names_to = c("metric", "model"),
+    names_sep = "\\.",
+    values_to = "result"
+  )
+```
+
+```{r fig.width=8, fig.height=12}
+res_test |>
+  ggplot(aes(x = model, y = result, group = metric, color = metric)) +
+  geom_line(size = 0.8) +
+  labs(
+    title = "Testing Performance by Models and Metrics",
+    x = "Model",
+    y = "Performance"
+  ) +
+  guides(color = guide_legend("Metric")) +
+  facet_wrap(~ metric, ncol = 1, scales = "free_y") + 
+  theme_bw() +
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
+```
 

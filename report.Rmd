@@ -116,6 +116,10 @@ In **model comparison**, we initially assessed the performance of various models
 knitr::include_graphics("finalmodel.png")
 ```
 
+```{r out.width='100%', fig.align='center', echo=FALSE}
+knitr::include_graphics("testingmodel.png")
+```
+
 ## MARS Model and Intrepertation
 
 \begin{align*}
