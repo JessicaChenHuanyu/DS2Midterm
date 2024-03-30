@@ -155,11 +155,7 @@ covid |>
 ```{r}
 par(mar = c(1, 1, 1, 1), mfrow=c(1,1))
 corrplot::corrplot(cor(covid |> select(recovery_time, age, bmi, weight, height, ldl, sbp)), type = "upper", order = "AOE", diag = FALSE, title = "Correlation Plot of Variables", cex.main = 1.5, mar = c(0, 0, 1, 0))
-```
 
-## Analysis between predictors
-
-```{r}
 covid_numeric = 
   covid |>
   select(where(is.numeric))
@@ -167,58 +163,6 @@ covid_numeric =
 ggcorrplot(cor(covid_numeric), lab = T) +
   ggtitle("Correlation Plot of Continuous Variables") + 
   theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
-
-covid_factor =
-  covid |>
-  select(where(is.factor), recovery_time)
-
-covid_factor_nonresp =
-  covid |>
-  select(where(is.factor))
-
-chi_sq_matrix = matrix(NA, ncol = ncol(covid_factor_nonresp), nrow = ncol(covid_factor_nonresp))
-for (i in 1:(ncol(covid_factor_nonresp)-1)) {
-  for (j in (i+1):ncol(covid_factor_nonresp)) {
-    cross_table = table(covid_factor_nonresp[,i, drop = TRUE],
-                        covid_factor_nonresp[,j, drop = TRUE])
-    chi_sq_matrix[i,j] = chisq.test(cross_table)$p.value
-  }
-}
-
-rownames(chi_sq_matrix) = colnames(covid_factor_nonresp)
-colnames(chi_sq_matrix) = colnames(covid_factor_nonresp)
-
-chi_sq_matrix = t(chi_sq_matrix)
-
-pheatmap(chi_sq_matrix,
-         cluster_rows = FALSE, cluster_cols = FALSE,
-         show_rownames = TRUE, show_colnames = TRUE,
-         legend = TRUE, display_numbers = TRUE)
-
-covid_factor_long = 
-  covid_factor |>
-  gather(key = "predictor", value = "value", -recovery_time)
-
-ggplot(covid_factor_long, aes(x = value, y = recovery_time)) +
-  geom_violin() +
-  facet_wrap(~predictor, scales = "free")
-
-anova_matrix = matrix(NA, ncol = ncol(covid_numeric), nrow = ncol(covid_numeric))
-for (i in 1:(ncol(covid_numeric))) {
-  for (j in 1:ncol(covid_numeric)) {
-    cross_dat = data.frame(num_1 = covid_numeric[,i, drop = TRUE], 
-                           num_2 = covid_numeric[,j, drop = TRUE])
-    anova_matrix[i,j] = summary(aov(num_1 ~ num_2, data = cross_dat))[[1]]$"Pr(>F)"[[1]]
-  }
-}
-
-rownames(anova_matrix) = colnames(covid_numeric)
-colnames(anova_matrix) = colnames(covid_numeric)
-
-pheatmap(anova_matrix,
-         cluster_rows = FALSE, cluster_cols = FALSE,
-         show_rownames = TRUE, show_colnames = TRUE,
-         legend = TRUE, display_numbers = TRUE)
 ```
 
 ## Lasso
