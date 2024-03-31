@@ -383,62 +383,6 @@ plot(gam.fit$finalModel)
 mtext("GAM Result", side = 3, line = 0.5, outer = TRUE, cex = 1.2)
 ```
 
-## Random Forest
-
-Model assumptions:\
-
-```{r}
-set.seed(11)
-rf.fit.1 = rpart(recovery_time ~ ., data = training, 
-               control = rpart.control(cp = 0.003))
-rpart.plot(rf.fit.1)
-printcp(rf.fit.1)
-plotcp(rf.fit.1)
-
-cptable = rf.fit.1$cptable
-minErr = which.min(cptable[,4])
-rf.fit.final = rpart::prune(rf.fit.1, cp = cptable[minErr,1])
-rpart.plot(rf.fit.final)
-plotcp(rf.fit.final)
-
-# test error
-rf.test = predict(rf.fit.final, x = xtest)
-rf.rmse = sqrt(mean((rf.test - ytest)^2))
-rf.rmse
-
-rf.r2.res = sum((ytest - rf.test)^2)
-rf.r2.tot = sum((ytest - mean(ytest))^2)
-rf.r2 = 1 - (rf.r2.res/rf.r2.tot)
-
-rf.mae = mean(abs(rf.test - ytest))
-```
-
-```{r}
-set.seed(11)
-rf.fit = train(xtrain, ytrain, 
-               method = "rf", 
-               trControl = ctrl, 
-               tuneGrid = expand.grid(mtry = 1:10))
-
-ctree.fit = train(recovery_time ~ ., training, 
-                  method = "ctree", 
-                  tuneGrid = data.frame(mincriterion = 1-exp(seq(-6, -2, length = 100))), 
-                  trControl = ctrl)
-
-# plot
-ggplot(rf.fit, highlight = TRUE) + 
-  theme_bw() +
-  labs(title = "Random Forest (rf.fit) CV Result") +
-  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
-
-ggplot(ctree.fit, highlight = TRUE) + 
-  theme_bw() +
-  labs(title = "Random Forest (ctree.fit) CV Result") +
-  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
-
-plot(ctree.fit$finalModel)
-```
-
 ## Model Comparation
 
 ```{r}
