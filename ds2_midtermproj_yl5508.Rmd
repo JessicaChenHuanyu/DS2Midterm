@@ -215,6 +215,40 @@ coef(lasso.fit.1se$finalModel, s = lasso.fit.1se$bestTune$lambda)
 sum(lasso.fit.1se$coefname != 0)
 ```
 
+## Ridge
+
+```{r warning = FALSE, message=FALSE}
+set.seed(11)
+
+ctrl = trainControl(method = 'cv', number = 10)
+ctrl_1se = trainControl(method = 'cv', number = 10, selectionFunction =  'oneSE')
+
+ridge.fit = train(recovery_time ~ ., data = training, 
+             method = 'glmnet', 
+             tuneGrid = expand.grid(alpha = 0, 
+                                    lambda = exp(seq(-2, 4, length = 100))), 
+             trControl = ctrl)
+
+plot(ridge.fit, xTrans = log, main = "Ridge CV Result")
+
+# selected lambda
+ridge.fit$bestTune$lambda
+```
+
+```{r warning = FALSE, message=FALSE}
+# applying 1se rule
+ridge.fit.1se = train(recovery_time ~ ., data = training, 
+             method = 'glmnet', 
+             tuneGrid = expand.grid(alpha = 0, 
+                                    lambda = exp(seq(-2, 4, length = 100))), 
+             trControl = ctrl_1se)
+
+plot(ridge.fit.1se, xTrans = log, main = "Ridge_1se CV Result")
+
+# selected alpha and lambda
+ridge.fit.1se$bestTune$lambda
+```
+
 ## Elastic Net
 
 Model assumptions:\
@@ -411,13 +445,16 @@ plot(ctree.fit$finalModel)
 library(patchwork)
 res = resamples(list(lasso = lasso.fit, 
                      lasso_1se = lasso.fit.1se, 
+                     ridge = ridge.fit, 
+                     ridge_1se = ridge.fit.1se, 
                      enet = enet.fit, 
                      enet_1se = enet.fit.1se, 
                      pls = pls.fit, 
                      mars = mars.fit, 
-                     gam = gam.fit, 
-                     rf = rf.fit, 
-                     rf_ctree = ctree.fit))$value |>
+                     gam = gam.fit#, 
+                     #rf = rf.fit, 
+                     #rf_ctree = ctree.fit
+                     ))$value |>
   tibble() |>
   janitor::clean_names() |>
   select(- resample) |>
@@ -476,6 +513,18 @@ perf.lasso_1se = postResample(pred = pred.lasso.1se, obs = testing$recovery_time
 #r2.lasso_1se = cor(testing$recovery_time, pred.lasso.1se)^2
 #mae.lasso_1se = mean(abs(testing$recovery_time - pred.lasso.1se))
 
+pred.ridge = predict(ridge.fit, newdata = testing)
+perf.ridge = postResample(pred = pred.ridge, obs = testing$recovery_time)
+#rmse.ridge = sqrt(mean((testing$recovery_time - pred.ridge)^2))
+#r2.ridge = cor(testing$recovery_time, pred.ridge)^2
+#mae.ridge = mean(abs(testing$recovery_time - pred.ridge))
+
+pred.ridge.1se = predict(ridge.fit.1se, newdata = testing)
+perf.ridge_1se = postResample(pred = pred.ridge.1se, obs = testing$recovery_time)
+#rmse.ridge_1se = sqrt(mean((testing$recovery_time - pred.ridge.1se)^2))
+#r2.ridge_1se = cor(testing$recovery_time, pred.ridge.1se)^2
+#mae.ridge_1se = mean(abs(testing$recovery_time - pred.ridge.1se))
+
 pred.enet = predict(enet.fit, newdata = testing)
 perf.enet = postResample(pred = pred.enet, obs = testing$recovery_time)
 #rmse.enet = sqrt(mean((testing$recovery_time - pred.enet)^2))
@@ -521,6 +570,8 @@ perf.rf.ctree = postResample(pred = pred.ctree, obs = testing$recovery_time)
 #res_test = tibble(
 #  rmse.lasso, r2.lasso, mae.lasso, 
 #  rmse.lasso_1se, r2.lasso_1se, mae.lasso_1se, 
+#  rmse.ridge, r2.ridge, mae.ridge, 
+#  rmse.ridge_1se, r2.ridge_1se, mae.ridge_1se, 
 #  rmse.enet, r2.enet, mae.enet, 
 #  rmse.enet_1se, r2.enet_1se, mae.enet_1se, 
 #  rmse.pls, r2.pls, mae.pls, 
