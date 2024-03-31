@@ -46,6 +46,16 @@ The attached graphs display the Root Mean Square Error (RMSE) across different v
 knitr::include_graphics("lasso_1.png")
 ```
 
+## Ridge
+
+The **model assumptions** for Lasso includes:
+
+-   
+
+```{r out.width='100%', fig.align='center', echo=FALSE}
+knitr::include_graphics("ridge.png")
+```
+
 ## Elastic Net
 
 The **model assumptions** for Elastic Net includes:
@@ -94,18 +104,6 @@ The **model assumptions** for GAM includes:
 knitr::include_graphics("GAM.png")
 ```
 
-## Random Forest
-
-The **model assumptions** for Random Forest includes:
-
--   Independence among trees: Individual trees are built independently and they do not rely on each other when being created. The independence is crucial for reducing the correlation among trees, thus enhancing the model's ability to generalize.
-
--   Random Forest assumes that combining the predictions of multiple trees reduces error. This aggregation assumes that errors in individual trees will cancel out when averaged, leading to a more accurate and robust model.\
-
-```{r out.width='100%', fig.align='center', echo=FALSE}
-knitr::include_graphics("rf_1.png")
-```
-
 # Result
 
 ## Model Comparation
@@ -113,11 +111,7 @@ knitr::include_graphics("rf_1.png")
 In **model comparison**, we initially assessed the performance of various models. Among these, the Generalized Additive Model (GAM), Multivariate Adaptive Regression Splines (MARS), Random Forest (rf), and Random Forest Conditional Inference Tree (rf_ctree) demonstrated promising performances. In the following step, we evaluated RMSE and MAE metrics, where MARS and RF exhibited similar performance and emerged as the top two models. However, due to the excessively wide range observed in RF's results, indicating potential instability, we opted for MARS as the final model for its stability and robustness.
 
 ```{r out.width='100%', fig.align='center', echo=FALSE}
-knitr::include_graphics("finalmodel.png")
-```
-
-```{r out.height='80%', fig.align='center', echo=FALSE}
-knitr::include_graphics("testingmodel.png")
+knitr::include_graphics("finalmodel_2.png")
 ```
 
 ## MARS Model and Intrepertation
