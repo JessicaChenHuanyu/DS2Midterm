@@ -26,11 +26,11 @@ We then created **scatterplots of six variables against recovery time**. It is e
 
 Moreover, the **correlation analysis** conducted on variables including "height," "weight," and "bmi" suggests a strong correlation among these attributes, which aligns with our common understanding. However, no significant correlations were observed between these attributes and other variables in the dataset.
 
-```{r out.width='95%', fig.align='center', echo=FALSE}
+```{r out.width='60%', fig.align='center', echo=FALSE}
 knitr::include_graphics("eda_1.png")
 ```
 
-```{r out.width='95%', fig.align='center', echo=FALSE}
+```{r out.width='110%', fig.align='center', echo=FALSE}
 knitr::include_graphics("eda_2.png")
 ```
 
@@ -76,15 +76,11 @@ The **model assumptions** for Elastic Net includes:
 
 -   Scaling of Predictors: The predictor variables are centered and standardized before applying elastic net.
 
-```{r out.width='100%', fig.align='center', echo=FALSE}
+```{r out.width='110%', fig.align='center', echo=FALSE}
 knitr::include_graphics("elasticnet_1.png")
 ```
 
-According to the plots: 
-
-- The trends of RMSE changing over regularization parameter are similar for cross-validation with and without 1SE rule.
-
-- The RMSE increases with the increase of regularization parameter for all the mixing percentage except 0.
+According to the plots, the trends of RMSE changing over regularization parameter are similar for cross-validation with and without 1SE rule. The RMSE increases with the increase of regularization parameter for all the mixing percentage except 0.
 
 ## PLS
 
@@ -146,7 +142,9 @@ knitr::include_graphics("finalmodel_2.png")
 
 where $\hat{Y}$ represents the predicted recovery time (in days).
 
-These coefficients represent the combined effect of race, bmi, height, study, vaccine, age, and severity participation on the predicted recovery time. For example, the coefficient $-514.279$ quantifies how being Asian (race group 2), having a BMI deviation from 31 (as determined by the smoothing function), and participating in study B collectively influence the predicted recovery time. Specifically, for individuals meeting these conditions, there is a decrease of 514.279 days in the predicted recovery time compared to White individuals (race group 1) with BMI 31 who participated in the group of study A.
+These coefficients represent the combined effect of race, bmi, height, study, vaccine, age, and severity participation on the predicted recovery time. For example, the coefficient $-514.279$ quantifies how being Asian (race group 2), having a BMI deviation from 31 (as determined by the smoothing function), and participating in study B collectively influence the predicted recovery time. Specifically, for individuals meeting these conditions, there is a decrease of 514.279 days in the predicted recovery time compared to White individuals (race group 1) with BMI 31 who participated in the group of study A. 
+
+Using the test dataset to assess the predictive performance of our final model (MARS), we obtained an RMSE of 21.18, an MAE of 13.05, and an R squared of 0.32.
 
 # Conclusion
 
