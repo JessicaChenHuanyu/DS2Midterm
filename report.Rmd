@@ -20,14 +20,18 @@ In this dataset, `age`, `height`, `weight`, `bmi`, `sbp`, `ldl`, and `recovery_t
 
 ## Data Visualization
 
-The **boxplot of recovery time by smoking status and gender** reveals a notable trend: across all smoking statuses, females (`gender` = 0) consistently exhibit longer recovery times compared to males. Interestingly, individuals who had never smoked had more outliers on the right side of the boxplot, suggesting a longer recovery time. This counter-intuitive finding suggests that individuals with healthier lifestyles, such as non-smokers, paradoxically require more time to recover from COVID-19.
+The **boxplot of recovery time by study group and infection severity** finds that in both cases of not severe and severe, the median of recovery time of study A is longer than that of study B, which implies that we need to consider the variable of `study` in our further analysis. In fact, study group can be considered a type of batch effect, so it is worth considering in our model. Specifically, batch effects are systematic non-biological differences between batches in experiments. Moreover, the **boxplot of recovery time by smoking status and gender** reveals a notable trend: across all smoking statuses, females (`gender` = 0) consistently exhibit longer recovery times compared to males. Interestingly, individuals who had never smoked had more outliers on the right side of the boxplot, suggesting a longer recovery time. This counter-intuitive finding suggests that individuals with healthier lifestyles, such as non-smokers, paradoxically require more time to recover from COVID-19.
 
 We then created **scatterplots of six variables against recovery time**. It is evident that most recovery times fall within the range of 0-100 days. However, no clear linear relationship emerges between recovery time and any of the variables.
 
-Moreover, the **correlation analysis** conducted on variables including "height," "weight," and "bmi" suggests a strong positive correlation among these attributes, which aligns with our common understanding. However, no significant correlations were observed between these attributes and other variables in the dataset.
+Moreover, the **correlation analysis** conducted on variables including "height," "weight," and "bmi" suggests a strong correlation among these attributes, which aligns with our common understanding. However, no significant correlations were observed between these attributes and other variables in the dataset.
 
 ```{r out.width='95%', fig.align='center', echo=FALSE}
-knitr::include_graphics("eda.png")
+knitr::include_graphics("eda_1.png")
+```
+
+```{r out.width='95%', fig.align='center', echo=FALSE}
+knitr::include_graphics("eda_2.png")
 ```
 
 # Model Training
@@ -36,9 +40,9 @@ knitr::include_graphics("eda.png")
 
 The **model assumptions** for Lasso includes:
 
--   Sparsity Assumption: Lasso assumes that the true model depends on only a small number of predictors, implying that the model is sparse. This means it's suited for scenarios where only a few variables significantly impact the response variable.
+-   Sparsity Assumption: Lasso assumes that the true model depends on only a small number of predictors. It can shrink some coefficients to zero and hence perform variable selection.
 
--   Regularization: By penalizing the magnitude of the coefficients (L1 penalty), Lasso encourages smaller absolute values of coefficients, thus reducing model complexity and the risk of overfitting.
+-   Scaling of Predictors: The predictor variables are centered and standardized before applying ridge regression. This is because the penalty term in ridge regression is applied to the coefficients of the predictor variables, and scaling ensures that this penalty is applied uniformly across all predictors.
 
 The attached graphs display the Root Mean Square Error (RMSE) across different values of the regularization parameter $\lambda$.
 
@@ -50,7 +54,9 @@ knitr::include_graphics("lasso_1.png")
 
 The **model assumptions** for Lasso includes:
 
--   
+-   Linear Relationship: Similar to ordinary least squares (OLS) regression, ridge regression assumes a linear relationship between the independent variables and the dependent variable.
+
+-   Scaling of Predictors: The predictor variables are centered and standardized before applying ridge regression. This is because the penalty term in ridge regression is applied to the coefficients of the predictor variables, and scaling ensures that this penalty is applied uniformly across all predictors.
 
 ```{r out.width='100%', fig.align='center', echo=FALSE}
 knitr::include_graphics("ridge.png")
