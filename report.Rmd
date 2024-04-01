@@ -52,6 +52,8 @@ The attached graphs display the Root Mean Square Error (RMSE) across different v
 knitr::include_graphics("lasso_1.png")
 ```
 
+The cross-validation results with and without 1SE rule show similar trends: the RMSE increases with the increase of regularization parameter $\lambda$.
+
 ## Ridge
 
 The **model assumptions** for Lasso includes:
@@ -63,6 +65,8 @@ The **model assumptions** for Lasso includes:
 ```{r out.width='100%', fig.align='center', echo=FALSE}
 knitr::include_graphics("ridge.png")
 ```
+
+Similar to lasso model, both cross-validation results with and without 1SE show a similar increasing trend as the regularization parameter increases.
 
 ## Elastic Net
 
@@ -76,6 +80,12 @@ The **model assumptions** for Elastic Net includes:
 knitr::include_graphics("elasticnet_1.png")
 ```
 
+According to the plots: 
+
+- The trends of RMSE changing over regularization parameter are similar for cross-validation with and without 1SE rule.
+
+- The RMSE increases with the increase of regularization parameter for all the mixing percentage except 0.
+
 ## PLS
 
 The **model assumptions** for PLS includes:
@@ -87,6 +97,8 @@ The **model assumptions** for PLS includes:
 ```{r out.width='65%', fig.align='center', echo=FALSE}
 knitr::include_graphics("PLS.png")
 ```
+
+The RMSE decreases with the increase of component number, and reaches minimum when component number is 9.
 
 ## MARS
 
@@ -100,6 +112,8 @@ The **model assumptions** for MARS includes:
 knitr::include_graphics("MARS.png")
 ```
 
+A grid search of parameter is conducted in grid 1:6 * 2:15. According to the plot, the RMSE reaches minimum when degree = 4 and terms number = 8.
+
 ## GAM
 
 The **model assumptions** for GAM includes:
@@ -109,6 +123,8 @@ The **model assumptions** for GAM includes:
 ```{r out.width='80%', fig.align='center', echo=FALSE}
 knitr::include_graphics("GAM.png")
 ```
+
+The graph shows the relationship between the smooth function between predictors and recovery time. Some predictors, such as age, sbp, and ldl, show no significant relationship with recovery time (smooth function = 0). Other predictors, such as BMI, height, and weight, have an additive effect on recovery time through their smooth function.
 
 # Result
 
