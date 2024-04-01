@@ -117,59 +117,14 @@ covid |>
   theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
 ```
 
-```{r}
-# Ridge plots
-covid |>
-  mutate(vaccine = factor(vaccine, levels = c(0, 1), labels = c("Not vaccinated", "Vaccinated")), 
-         severity = factor(severity, levels = c(0, 1), labels = c("Not severe", "Severe"))) |>
-  ggplot(aes(x = recovery_time, fill = severity)) +
-  geom_density_ridges(alpha = 0.5) +
-  labs(
-    title = "Recovery Time by Vaccine and Severity",
-    x = "Vaccine",
-    y = "Recovery Time"
-  ) +
-  guides(fill = guide_legend("Severity")) +
-  theme_minimal() +
-  facet_grid(~ vaccine) +
-  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
-```
-
-```{r}
-covid |>
-  mutate(gender = factor(gender, levels = c(0, 1), labels = c("Female", "Male")), 
-         smoking = factor(smoking, levels = c(0, 1, 2), labels = c("Never smoked", "Former smoker", "Current smoker"))) |>
-  ggplot(aes(x = recovery_time, fill = gender)) +
-  geom_boxplot() +
-  labs(title = "Boxplot of Recovery Time by Smoking Status and Gender",
-       x = "Recovery Time",
-       y = "Smoking Status",
-       fill = "Gender") +
-  theme_bw() +
-  facet_wrap(~ smoking, ncol = 1) + 
-  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
-```
-
 ## Correlation Plot
 
 ```{r}
 par(mar = c(1, 1, 1, 1), mfrow=c(1,1))
 corrplot::corrplot(cor(covid |> select(recovery_time, age, bmi, weight, height, ldl, sbp)), type = "upper", order = "AOE", diag = FALSE, title = "Correlation Plot of Variables", cex.main = 1.5, mar = c(0, 0, 1, 0))
-
-covid_numeric = 
-  covid |>
-  select(where(is.numeric))
-
-ggcorrplot(cor(covid_numeric), lab = T) +
-  ggtitle("Correlation Plot of Continuous Variables") + 
-  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5))
 ```
 
 ## Lasso
-
-Model assumptions:\
-(a) Sparsity Assumption: Lasso assumes that the true model depends on only a small number of predictors, implying that the model is sparse.  This means it's suited for scenarios where only a few variables significantly impact the response variable.\
-(b) Regularization: By penalizing the magnitude of the coefficients (L1 penalty), Lasso encourages smaller absolute values of coefficients, thus reducing model complexity and the risk of overfitting.\
 
 ```{r warning = FALSE, message=FALSE}
 set.seed(11)
@@ -251,10 +206,6 @@ ridge.fit.1se$bestTune$lambda
 
 ## Elastic Net
 
-Model assumptions:\
-(a) Combined Regularization: Elastic Net uses both L1 and L2 regularization, combining Lasso's variable selection capability with Ridge regression's ability to handle highly correlated predictors.\
-(b) Adjusting Regularization Balance: Elastic Net has two regularization parameters, controlling the overall strength of regularization and the weight balance between L1 and L2 terms. This offers more flexible model tuning capability.\
-
 ```{r}
 set.seed(11)
 ctrl = trainControl(method = 'cv', number = 10)
@@ -281,7 +232,6 @@ coef(enet.fit$finalModel, s = enet.fit$bestTune$lambda)
 sum(enet.fit$coefname != 0)
 ```
 
-
 ```{r}
 # applying 1se rule
 set.seed(11)
@@ -299,10 +249,6 @@ enet.fit.1se$bestTune
 
 ## PLS
 
-Model assumptions:\
-(a) Linear Relationship: PLS assumes a linear relationship between the independent variables and the response variable. It aims to find the multidimensional direction in the X space that explains the maximum multidimensional variance direction in the Y space.\
-(b) PLS assumes that the structure of the relationship between X and Y variables can be captured through a few latent structures. This is fundamental to reducing dimension and extracting the most relevant information from X that predicts Y.\
-
 ```{r}
 set.seed(11)
 
@@ -312,11 +258,11 @@ set.seed(11)
 #cv.mse = RMSEP(pls)
 #ncomp.cv = which.min(cv.mse$val[1,,]) - 1
 
-pls.fit <- train(recovery_time ~ ., data = training, 
-                 method = "pls", 
-                 tuneGrid = data.frame(ncomp = 1:15), 
-                 trControl = ctrl, 
-                 preProcess = c("center", "scale"))
+pls.fit = train(recovery_time ~ ., data = training, 
+                method = "pls", 
+                tuneGrid = data.frame(ncomp = 1:15), 
+                trControl = ctrl, 
+                preProcess = c("center", "scale"))
 
 ggplot(pls.fit, highlight = TRUE) +
   theme_bw() +
@@ -328,10 +274,6 @@ pls.fit$bestTune
 ```
 
 ## MARS
-
-Model assumptions:\
-(a) Non-linearity and Interaction: MARS does not assume that relationships between the independent variables and the dependent variable are linear or follow a specific functional form. Instead, it adaptively fits piecewise linear regressions that can model complex non-linear relationships and interactions among variables.\
-(b) Distribution of Errors: MARS does not make specific assumptions about the distribution of error terms.\
 
 ```{r message = FALSE, warning = FALSE}
 set.seed(11)
@@ -364,10 +306,6 @@ gridExtra::grid.arrange(p1, p2, ncol = 2)
 ```
 
 ## GAM
-
-Model assumptions:\
-(a) Additivity: The effect of each predictor on the response is additive. The total effect on the response variable is the sum of the effects of each predictor, modeled by its own smooth function.\
-(b) Smoothness of the Predictor Functions: The relationships between the predictors and the response can be adequately modeled using smooth functions. The degree of smoothness is usually determined by the data and is controlled by smoothing parameters, which can be estimated from the data itself.\
 
 ```{r}
 set.seed(11)
@@ -447,89 +385,89 @@ final_plot
 # testing data
 pred.lasso = predict(lasso.fit, newdata = testing)
 perf.lasso = postResample(pred = pred.lasso, obs = testing$recovery_time)
-#rmse.lasso = sqrt(mean((testing$recovery_time - pred.lasso)^2))
-#r2.lasso = cor(testing$recovery_time, pred.lasso)^2
-#mae.lasso = mean(abs(testing$recovery_time - pred.lasso))
+rmse.lasso = sqrt(mean((testing$recovery_time - pred.lasso)^2))
+r2.lasso = cor(testing$recovery_time, pred.lasso)^2
+mae.lasso = mean(abs(testing$recovery_time - pred.lasso))
 
 pred.lasso.1se = predict(lasso.fit.1se, newdata = testing)
 perf.lasso_1se = postResample(pred = pred.lasso.1se, obs = testing$recovery_time)
-#rmse.lasso_1se = sqrt(mean((testing$recovery_time - pred.lasso.1se)^2))
-#r2.lasso_1se = cor(testing$recovery_time, pred.lasso.1se)^2
-#mae.lasso_1se = mean(abs(testing$recovery_time - pred.lasso.1se))
+rmse.lasso_1se = sqrt(mean((testing$recovery_time - pred.lasso.1se)^2))
+r2.lasso_1se = cor(testing$recovery_time, pred.lasso.1se)^2
+mae.lasso_1se = mean(abs(testing$recovery_time - pred.lasso.1se))
 
 pred.ridge = predict(ridge.fit, newdata = testing)
 perf.ridge = postResample(pred = pred.ridge, obs = testing$recovery_time)
-#rmse.ridge = sqrt(mean((testing$recovery_time - pred.ridge)^2))
-#r2.ridge = cor(testing$recovery_time, pred.ridge)^2
-#mae.ridge = mean(abs(testing$recovery_time - pred.ridge))
+rmse.ridge = sqrt(mean((testing$recovery_time - pred.ridge)^2))
+r2.ridge = cor(testing$recovery_time, pred.ridge)^2
+mae.ridge = mean(abs(testing$recovery_time - pred.ridge))
 
 pred.ridge.1se = predict(ridge.fit.1se, newdata = testing)
 perf.ridge_1se = postResample(pred = pred.ridge.1se, obs = testing$recovery_time)
-#rmse.ridge_1se = sqrt(mean((testing$recovery_time - pred.ridge.1se)^2))
-#r2.ridge_1se = cor(testing$recovery_time, pred.ridge.1se)^2
-#mae.ridge_1se = mean(abs(testing$recovery_time - pred.ridge.1se))
+rmse.ridge_1se = sqrt(mean((testing$recovery_time - pred.ridge.1se)^2))
+r2.ridge_1se = cor(testing$recovery_time, pred.ridge.1se)^2
+mae.ridge_1se = mean(abs(testing$recovery_time - pred.ridge.1se))
 
 pred.enet = predict(enet.fit, newdata = testing)
 perf.enet = postResample(pred = pred.enet, obs = testing$recovery_time)
-#rmse.enet = sqrt(mean((testing$recovery_time - pred.enet)^2))
-#r2.enet = cor(testing$recovery_time, pred.enet)^2
-#mae.enet = mean(abs(testing$recovery_time - pred.enet))
+rmse.enet = sqrt(mean((testing$recovery_time - pred.enet)^2))
+r2.enet = cor(testing$recovery_time, pred.enet)^2
+mae.enet = mean(abs(testing$recovery_time - pred.enet))
 
 pred.enet.1se = predict(enet.fit.1se, newdata = testing)
 perf.enet_1se = postResample(pred = pred.enet.1se, obs = testing$recovery_time)
-#rmse.enet_1se = sqrt(mean((testing$recovery_time - pred.enet.1se)^2))
-#r2.enet_1se = cor(testing$recovery_time, pred.enet.1se)^2
-#mae.enet_1se = mean(abs(testing$recovery_time - pred.enet.1se))
+rmse.enet_1se = sqrt(mean((testing$recovery_time - pred.enet.1se)^2))
+r2.enet_1se = cor(testing$recovery_time, pred.enet.1se)^2
+mae.enet_1se = mean(abs(testing$recovery_time - pred.enet.1se))
 
 pred.pls = predict(pls.fit, newdata = testing)
 perf.pls = postResample(pred = pred.pls, obs = testing$recovery_time)
-#rmse.pls = sqrt(mean((testing$recovery_time - pred.pls)^2))
-#r2.pls = cor(testing$recovery_time, pred.pls)^2
-#mae.pls = mean(abs(testing$recovery_time - pred.pls))
+rmse.pls = sqrt(mean((testing$recovery_time - pred.pls)^2))
+r2.pls = cor(testing$recovery_time, pred.pls)^2
+mae.pls = mean(abs(testing$recovery_time - pred.pls))
 
 pred.mars = predict(mars.fit, newdata = xtest)
 perf.mars = postResample(pred = pred.mars, obs = testing$recovery_time)
-#rmse.mars = sqrt(mean((testing$recovery_time - pred.mars)^2))
-#r2.mars = cor(testing$recovery_time, pred.mars)^2 |> as.numeric()
-#mae.mars = mean(abs(testing$recovery_time - pred.mars))
+rmse.mars = sqrt(mean((testing$recovery_time - pred.mars)^2))
+r2.mars = cor(testing$recovery_time, pred.mars)^2 |> as.numeric()
+mae.mars = mean(abs(testing$recovery_time - pred.mars))
 
 pred.gam = predict(gam.fit, newdata = xtest)
 perf.gam = postResample(pred = pred.gam, obs = testing$recovery_time)
-#rmse.gam = sqrt(mean((testing$recovery_time - pred.gam)^2))
-#r2.gam = cor(testing$recovery_time, pred.gam)^2
-#mae.gam = mean(abs(testing$recovery_time - pred.gam))
+rmse.gam = sqrt(mean((testing$recovery_time - pred.gam)^2))
+r2.gam = cor(testing$recovery_time, pred.gam)^2
+mae.gam = mean(abs(testing$recovery_time - pred.gam))
 
-pred.rf = predict(rf.fit, newdata = xtest)
-perf.rf = postResample(pred = pred.rf, obs = testing$recovery_time)
+#pred.rf = predict(rf.fit, newdata = xtest)
+#perf.rf = postResample(pred = pred.rf, obs = testing$recovery_time)
 #rmse.rf = sqrt(mean((testing$recovery_time - pred.rf)^2))
 #r2.rf = cor(testing$recovery_time, pred.rf)^2
 #mae.rf = mean(abs(testing$recovery_time - pred.rf))
 
-pred.ctree = predict(ctree.fit, newdata = testing)
-perf.rf.ctree = postResample(pred = pred.ctree, obs = testing$recovery_time)
+#pred.ctree = predict(ctree.fit, newdata = testing)
+#perf.rf.ctree = postResample(pred = pred.ctree, obs = testing$recovery_time)
 #rmse.rf_ctree = sqrt(mean((testing$recovery_time - pred.ctree)^2))
 #r2.rf_ctree = cor(testing$recovery_time, pred.ctree)^2
 #mae.rf_ctree = mean(abs(testing$recovery_time - pred.ctree))
 
-#res_test = tibble(
-#  rmse.lasso, r2.lasso, mae.lasso, 
-#  rmse.lasso_1se, r2.lasso_1se, mae.lasso_1se, 
-#  rmse.ridge, r2.ridge, mae.ridge, 
-#  rmse.ridge_1se, r2.ridge_1se, mae.ridge_1se, 
-#  rmse.enet, r2.enet, mae.enet, 
-#  rmse.enet_1se, r2.enet_1se, mae.enet_1se, 
-#  rmse.pls, r2.pls, mae.pls, 
-#  rmse.mars, r2.mars, mae.mars, 
-#  rmse.gam, r2.gam, mae.gam, 
+res_test = tibble(
+  rmse.lasso, r2.lasso, mae.lasso, 
+  rmse.lasso_1se, r2.lasso_1se, mae.lasso_1se, 
+  rmse.ridge, r2.ridge, mae.ridge, 
+  rmse.ridge_1se, r2.ridge_1se, mae.ridge_1se, 
+  rmse.enet, r2.enet, mae.enet, 
+  rmse.enet_1se, r2.enet_1se, mae.enet_1se, 
+  rmse.pls, r2.pls, mae.pls, 
+  rmse.mars, r2.mars, mae.mars, 
+  rmse.gam, r2.gam, mae.gam 
 #  rmse.rf, r2.rf, mae.rf, 
 #  rmse.rf_ctree, r2.rf_ctree, mae.rf_ctree
-#) |>
-#  pivot_longer(
-#    everything(),
-#    names_to = c("metric", "model"),
-#    names_sep = "\\.",
-#    values_to = "result"
-#  )
+) |>
+  pivot_longer(
+    everything(),
+    names_to = c("metric", "model"),
+    names_sep = "\\.",
+    values_to = "result"
+  )
 ```
 
 ```{r fig.width=8, fig.height=12}
