@@ -2,7 +2,7 @@
 title: "ds2_miterm_yl5508"
 author: "Yifei Liu"
 date: 2023/03/22
-output: html_document
+output: pdf_document
 ---
 
 ```{r message=FALSE, warning=FALSE}
@@ -22,7 +22,7 @@ library(rpart.plot)
 ## Data Wrangling
 
 ```{r}
-load('~/data science II/midterm/recovery.RData')
+load("recovery.Rdata")
 
 covid = as_tibble(dat) |>
   na.omit() |>

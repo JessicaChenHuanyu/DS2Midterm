@@ -46,13 +46,12 @@ The **model assumptions** for Lasso includes:
 
 -   Scaling of Predictors: The predictor variables are centered and standardized before applying lasso regression. This is because the penalty term in lasso regression is applied to the coefficients of the predictor variables, and scaling ensures that this penalty is applied uniformly across all predictors.
 
-The attached graphs display the Root Mean Square Error (RMSE) across different values of the regularization parameter $\lambda$.
 
 ```{r out.width='100%', fig.align='center', echo=FALSE}
 knitr::include_graphics("lasso_1.png")
 ```
 
-The cross-validation results with and without 1SE rule show similar trends: the RMSE increases with the increase of regularization parameter $\lambda$.
+The graphs above display the Root Mean Square Error (RMSE) across different values of the regularization parameter $\lambda$. We can find that the cross-validation results with and without 1SE rule show similar trends: the RMSE increases with the increase of regularization parameter $\lambda$.
 
 ## Ridge
 
